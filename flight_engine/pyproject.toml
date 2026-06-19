@@ -20,6 +20,7 @@ dependencies = [
     "loguru",
     "prometheus-client",
     "APScheduler",
+    "playwright",
 ]
 
 [tool.pytest.ini_options]

@@ -34,3 +34,16 @@ class FlightPriceHistoryModel(Base):
     price = Column(Numeric(10, 2), nullable=False)
     currency = Column(String, nullable=False)
     recorded_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class PriceAlertModel(Base):
+    __tablename__ = "price_alerts"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String, nullable=False, index=True)
+    telegram_chat_id = Column(String, nullable=True)
+    origin = Column(String, nullable=False)
+    destination = Column(String, nullable=False)
+    departure_date = Column(DateTime(timezone=True), nullable=False)
+    target_price = Column(Numeric(10, 2), nullable=False)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+

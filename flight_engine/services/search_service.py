@@ -196,31 +196,65 @@ class SearchService:
         return self._apply_strategy(flights, strategy_name)
 
     async def stream_search(self, req: SearchFlightRequest):
-        dep_date = datetime.strptime(req.departure_date, "%Y-%m-%d")
+        origin = req.origin.upper()
+        destination = req.destination.upper()
+        dep_date_str = req.departure_date
+        strategy = req.strategy.lower()
         
-        async def fetch_and_yield(collector):
-            try:
-                flights = await collector.fetch_flights(req.origin, req.destination, dep_date, req.adults)
-                # Apply strategy to the local chunk just to send it sorted
-                flights = self._apply_strategy(flights, req.strategy)
-                serialized = self._serialize(flights)
-                return {
-                    "collector": collector.name,
-                    "status": "success",
-                    "flights": serialized
-                }
-            except Exception as e:
-                await event_bus.publish("CollectorFailed", {"collector_name": collector.name, "error": str(e)})
-                return {
-                    "collector": collector.name,
-                    "status": "error",
-                    "error": str(e)
-                }
-
-        tasks = [asyncio.create_task(fetch_and_yield(c)) for c in registry.get_all()]
+        collectors = registry.get_all()
+        pending_collectors = []
         
-        for future in asyncio.as_completed(tasks):
-            result = await future
-            yield f"data: {json.dumps(result)}\n\n"
+        # 1. First, check cache for each collector. Yield immediately if cached.
+        for collector in collectors:
+            cache_key = f"flights:{origin}:{destination}:{dep_date_str}:{strategy}:{collector.name}"
+            cached_data = await cache_service.get(cache_key)
+            if cached_data:
+                logger.info(f"Cache HIT for collector {collector.name} (key: {cache_key})")
+                yield f"data: {json.dumps({'collector': collector.name, 'status': 'success', 'flights': cached_data})}\n\n"
+            else:
+                pending_collectors.append(collector.name)
+        
+        # 2. If all collectors were cached, we are done!
+        if not pending_collectors:
+            return
+            
+        # 3. For any pending collectors, trigger Dramatiq background tasks
+        from workers.tasks import scrape_and_cache_flights_task
+        for col_name in pending_collectors:
+            logger.info(f"Triggering background task to scrape {col_name} for {origin}->{destination} on {dep_date_str}")
+            scrape_and_cache_flights_task.send(origin, destination, dep_date_str, col_name, strategy)
+            
+        # 4. Subscribe to the Redis Pub/Sub channel to wait for background results
+        pubsub_channel = f"pubsub:flights:{origin}:{destination}:{dep_date_str}:{strategy}"
+        pubsub = cache_service.redis.pubsub()
+        await pubsub.subscribe(pubsub_channel)
+        
+        try:
+            received_count = 0
+            target_count = len(pending_collectors)
+            
+            # Read messages with a timeout (e.g. 50 seconds max loop)
+            start_time = datetime.utcnow()
+            while received_count < target_count:
+                if (datetime.utcnow() - start_time).total_seconds() > 50:
+                    logger.warning("Stream search timed out waiting for background workers.")
+                    break
+                    
+                msg = await pubsub.get_message(ignore_subscribe_messages=True, timeout=1.0)
+                if msg:
+                    data_str = msg["data"]
+                    if isinstance(data_str, bytes):
+                        data_str = data_str.decode("utf-8")
+                    data = json.loads(data_str)
+                    col_name = data.get("collector")
+                    
+                    if col_name in pending_collectors:
+                        yield f"data: {data_str}\n\n"
+                        received_count += 1
+                else:
+                    await asyncio.sleep(0.5)
+        finally:
+            await pubsub.unsubscribe(pubsub_channel)
+            await pubsub.close()
             
 search_service = SearchService()

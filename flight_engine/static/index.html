@@ -36,23 +36,108 @@
                         <label for="return_date">Data de Volta (Opcional)</label>
                         <input type="date" id="return_date">
                     </div>
-                    <div class="input-group">
+                    <div class="input-group btn-group-row">
                         <button type="submit" id="search-btn">Buscar Voos</button>
+                        <button type="button" id="open-alert-btn" class="secondary-btn" title="Criar Alerta de Preço">🔔 Alerta</button>
                     </div>
                 </form>
             </section>
             
             <section class="results-panel">
-                <div id="loader" class="hidden">
-                    <div class="spinner"></div>
-                    <p>Buscando nas companhias aéreas em tempo real...</p>
+                <!-- Smart Combo Section -->
+                <div id="smart-combo-container" class="hidden">
+                    <!-- Dynamic Smart Combo Card will render here -->
                 </div>
-                <div class="grid" id="flights-grid">
-                    <!-- Cards de voos aparecerão aqui via JS -->
+
+                <div id="results-layout" class="results-layout">
+                    <!-- Sidebar Filters -->
+                    <aside id="filters-sidebar" class="filters-sidebar glass hidden">
+                        <h3>Filtrar Resultados</h3>
+                        
+                        <div class="filter-group">
+                            <label>Ordenação</label>
+                            <div class="sort-buttons">
+                                <button type="button" class="sort-btn active" data-sort="price">Mais Barato</button>
+                                <button type="button" class="sort-btn" data-sort="duration">Mais Rápido</button>
+                                <button type="button" class="sort-btn" data-sort="stops">Paradas</button>
+                            </div>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Escalas Máximas</label>
+                            <select id="filter-stops">
+                                <option value="any">Qualquer escala</option>
+                                <option value="0">Apenas voos diretos (0)</option>
+                                <option value="1">No máximo 1 escala</option>
+                            </select>
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Preço Máximo: <span id="price-limit-val">R$ 10.000</span></label>
+                            <input type="range" id="filter-price" min="0" max="10000" step="50" value="10000">
+                        </div>
+
+                        <div class="filter-group">
+                            <label>Companhias Aéreas</label>
+                            <div id="filter-airlines-list" class="checkbox-group">
+                                <!-- Dynamic checkboxes -->
+                            </div>
+                        </div>
+                    </aside>
+
+                    <!-- Main Results Area -->
+                    <div class="results-main">
+                        <div id="loader" class="hidden">
+                            <div class="spinner"></div>
+                            <p>Buscando nas companhias aéreas em tempo real...</p>
+                        </div>
+                        <div class="grid" id="flights-grid">
+                            <!-- Cards de voos aparecerão aqui via JS -->
+                        </div>
+                    </div>
                 </div>
             </section>
         </main>
     </div>
+
+    <!-- Modal Histórico de Preços -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-history-modal">&times;</span>
+            <h2>Histórico de Preços</h2>
+            <p id="history-route-title" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;"></p>
+            <div class="chart-container" style="position: relative; height:250px; width:100%">
+                <canvas id="price-history-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Criar Alerta -->
+    <div id="alert-modal" class="modal hidden">
+        <div class="modal-content glass">
+            <span class="close-modal" id="close-alert-modal">&times;</span>
+            <h2>Criar Alerta de Preço</h2>
+            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Seja notificado por e-mail ou Telegram assim que o preço para este trecho cair abaixo do seu limite.</p>
+            <form id="alert-form">
+                <div class="form-group-alert">
+                    <label for="alert-email">Seu E-mail</label>
+                    <input type="email" id="alert-email" placeholder="exemplo@email.com" required>
+                </div>
+                <div class="form-group-alert">
+                    <label for="alert-telegram">ID do Chat Telegram (Opcional)</label>
+                    <input type="text" id="alert-telegram" placeholder="Ex: 18273645">
+                </div>
+                <div class="form-group-alert">
+                    <label for="alert-price">Preço Limite (R$)</label>
+                    <input type="number" id="alert-price" min="1" step="any" placeholder="Ex: 1200" required>
+                </div>
+                <div class="form-group-alert" style="margin-top: 1.5rem;">
+                    <button type="submit" id="submit-alert-btn" style="width: 100%;">Criar Meu Alerta</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="/static/app.js"></script>
 </body>
 </html>

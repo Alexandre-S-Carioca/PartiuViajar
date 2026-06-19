@@ -19,4 +19,12 @@ class Flight:
     cabin_class: str
     booking_url: str
     collected_at: datetime = field(default_factory=datetime.utcnow)
-    id: str = field(default_factory=lambda: str(uuid.uuid4()))
+    id: str = None
+
+    def __post_init__(self):
+        if not self.id:
+            import hashlib
+            dep_str = self.departure_date.strftime("%Y-%m-%dT%H:%M")
+            # Unique key for a specific flight route, schedule, and flight properties (airline, stops, duration)
+            key = f"{self.airline}:{self.origin}:{self.destination}:{dep_str}:{self.duration}:{self.stops}".lower()
+            self.id = hashlib.md5(key.encode()).hexdigest()
