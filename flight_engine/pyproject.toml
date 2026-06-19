@@ -1,0 +1,37 @@
+[project]
+name = "flight_engine"
+version = "0.1.0"
+description = "Metabuscador de passagens aéreas de alta performance"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy",
+    "asyncpg",
+    "alembic",
+    "redis",
+    "httpx",
+    "tenacity",
+    "aiolimiter",
+    "pybreaker",
+    "dramatiq",
+    "loguru",
+    "prometheus-client",
+    "APScheduler",
+]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+addopts = "-ra -q"
+testpaths = [
+    "tests",
+]
+asyncio_mode = "auto"
+
+[tool.ruff]
+line-length = 120
+
+[tool.black]
+line-length = 120
