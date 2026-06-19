@@ -47,11 +47,29 @@ class KayakCollector(BaseCollector):
                         try:
                             price_val = Decimal(price_str)
                             
-                            # Tenta pegar um provável nome de companhia nas linhas anteriores
-                            # O Kayak às vezes mostra na linha -2 ou -3
-                            airline_candidate = lines[i-2] if i >= 2 else "Voo Kayak"
-                            if len(airline_candidate) > 20 or "R$" in airline_candidate:
-                                airline_candidate = "Múltiplas/Kayak"
+                            # Tenta pegar um provável nome de companhia nas linhas anteriores.
+                            # O Kayak mostra a companhia aérea na linha imediatamente antes do preço (i-1)
+                            # ou nas linhas anteriores a ela, se houver anúncios/tags intermediárias.
+                            airline_candidate = "Múltiplas/Kayak"
+                            for offset in range(1, 5):
+                                idx_cand = i - offset
+                                if idx_cand < 0:
+                                    break
+                                cand = lines[idx_cand]
+                                if (
+                                    "min" in cand or 
+                                    "h" in cand or 
+                                    "escala" in cand or 
+                                    "parada" in cand or 
+                                    "Anúncio" in cand or 
+                                    "Anuncio" in cand or 
+                                    cand == "|" or 
+                                    cand.startswith("R$") or
+                                    any(x in cand for x in ["Ver oferta", "Basic", "Pinto Martins", "Internacional"])
+                                ):
+                                    continue
+                                airline_candidate = cand
+                                break
                                 
                             flights.append(Flight(
                                 airline=airline_candidate,

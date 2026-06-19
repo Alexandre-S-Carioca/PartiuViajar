@@ -55,8 +55,18 @@ class GoogleFlightsCollector(BaseCollector):
                             continue
                             
                         # Extraindo a companhia aérea (geralmente é o texto logo após o horário)
-                        # Como o DOM é mutável, tentaremos pegar uma das primeiras linhas de texto
-                        airline = lines[1] if len(lines) > 1 else "Unknown Airline"
+                        # Como o DOM é mutável, tentaremos pegar a primeira linha de texto que não seja hora nem delimitador
+                        airline = "Unknown Airline"
+                        for line in lines:
+                            is_time_or_dash = (":" in line and any(c.isdigit() for c in line)) or line in ("–", "-", "—")
+                            if not is_time_or_dash:
+                                airline = line
+                                break
+                        
+                        # Limpando o nome da companhia aérea (ex: remover "Operado por...")
+                        if "Operado" in airline:
+                            airline = airline.split("Operado")[0].strip()
+                        airline = airline.rstrip(",").strip()
                         
                         # Impedir lixo de outras LIs (ex: rodapé)
                         if len(airline) > 30: continue
