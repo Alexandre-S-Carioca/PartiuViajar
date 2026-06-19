@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Antigravity Flights | Busca Premium</title>
+    <title>Partiu Viajar</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/style.css">
 </head>
@@ -11,40 +11,30 @@
     <div class="background-mesh"></div>
     <div class="container">
         <header>
-            <h1>Antigravity<span>Flights</span></h1>
+            <h1>Partiu<span>Viajar</span></h1>
             <p>O primeiro metabuscador de passagens em tempo real.</p>
         </header>
         
         <main>
             <section class="search-panel glass">
                 <form id="search-form">
-                    <datalist id="airports">
-                        <option value="FOR">Fortaleza (Pinto Martins)</option>
-                        <option value="SCL">Santiago do Chile (Arturo Merino)</option>
-                        <option value="GRU">São Paulo (Guarulhos)</option>
-                        <option value="CGH">São Paulo (Congonhas)</option>
-                        <option value="GIG">Rio de Janeiro (Galeão)</option>
-                        <option value="SDU">Rio de Janeiro (Santos Dumont)</option>
-                        <option value="BSB">Brasília (Pres. Juscelino Kubitschek)</option>
-                        <option value="MIA">Miami (Miami Intl)</option>
-                        <option value="JFK">Nova York (John F. Kennedy)</option>
-                        <option value="CDG">Paris (Charles de Gaulle)</option>
-                    </datalist>
-                    <div class="input-group">
+                    <div class="input-group autocomplete-wrapper">
                         <label for="origin">Origem</label>
-                        <input type="text" id="origin" value="FOR" list="airports" autocomplete="off" required>
+                        <input type="text" id="origin" placeholder="Ex: FOR, São Paulo" autocomplete="off" required>
+                        <div id="origin-suggestions" class="suggestions-dropdown hidden"></div>
                     </div>
-                    <div class="input-group">
+                    <div class="input-group autocomplete-wrapper">
                         <label for="destination">Destino</label>
-                        <input type="text" id="destination" value="SCL" list="airports" autocomplete="off" required>
+                        <input type="text" id="destination" placeholder="Ex: SCL, Santiago" autocomplete="off" required>
+                        <div id="destination-suggestions" class="suggestions-dropdown hidden"></div>
                     </div>
                     <div class="input-group">
                         <label for="departure_date">Data de Ida</label>
-                        <input type="date" id="departure_date" value="2026-11-22" required>
+                        <input type="date" id="departure_date" required>
                     </div>
                     <div class="input-group">
                         <label for="return_date">Data de Volta (Opcional)</label>
-                        <input type="date" id="return_date" value="2026-11-30">
+                        <input type="date" id="return_date">
                     </div>
                     <div class="input-group">
                         <button type="submit" id="search-btn">Buscar Voos</button>

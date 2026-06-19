@@ -142,6 +142,9 @@ button:hover {
     opacity: 0;
     transform: translateY(20px);
     animation: fadeUp 0.6s forwards;
+    text-decoration: none;
+    color: inherit;
+    cursor: pointer;
 }
 
 .flight-card:hover {
@@ -202,3 +205,95 @@ button:hover {
 }
 
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* Autocomplete custom dropdown styles */
+.autocomplete-wrapper {
+    position: relative;
+}
+
+.suggestions-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid var(--glass-border);
+    border-radius: 8px;
+    z-index: 1000;
+    max-height: 280px;
+    overflow-y: auto;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7);
+    margin-top: 2px;
+}
+
+/* Custom Scrollbar for suggestions */
+.suggestions-dropdown::-webkit-scrollbar {
+    width: 6px;
+}
+.suggestions-dropdown::-webkit-scrollbar-track {
+    background: transparent;
+}
+.suggestions-dropdown::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+}
+.suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.2s ease;
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.suggestion-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.suggestion-city-country {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-light);
+}
+
+.suggestion-airport-name {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+.suggestion-code-badge {
+    background: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    letter-spacing: 0.5px;
+}
+
+.suggestion-item:hover .suggestion-code-badge,
+.suggestion-item.active .suggestion-code-badge {
+    background: var(--primary);
+    color: white;
+}
+

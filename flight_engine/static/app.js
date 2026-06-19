@@ -3,6 +3,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const grid = document.getElementById("flights-grid");
     const loader = document.getElementById("loader");
 
+    // Limpar campos do formulário ao carregar (F5)
+    if (form) {
+        form.reset();
+        document.getElementById("origin").value = "";
+        document.getElementById("destination").value = "";
+        document.getElementById("departure_date").value = "";
+        document.getElementById("return_date").value = "";
+    }
+
     let accessToken = "";
 
     // Autenticação mock background
@@ -32,10 +41,20 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-        const origin = document.getElementById("origin").value.toUpperCase();
-        const dest = document.getElementById("destination").value.toUpperCase();
+        let origin = document.getElementById("origin").value.trim().toUpperCase();
+        let dest = document.getElementById("destination").value.trim().toUpperCase();
         const date = document.getElementById("departure_date").value;
         const returnDate = document.getElementById("return_date").value;
+
+        // Extract 3-letter code if input contains " - XXX" (e.g. from dropdown selection)
+        const originMatch = origin.match(/-\s*([A-Z]{3})\s*$/);
+        if (originMatch) {
+            origin = originMatch[1];
+        }
+        const destMatch = dest.match(/-\s*([A-Z]{3})\s*$/);
+        if (destMatch) {
+            dest = destMatch[1];
+        }
 
         // Limpar tela
         grid.innerHTML = "";
@@ -95,8 +114,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
     function renderFlights(flights, collectorName, tripType) {
         flights.forEach((flight, index) => {
-            const card = document.createElement("div");
+            const card = document.createElement("a");
             card.className = "flight-card glass";
+            card.href = flight.booking_url || "#";
+            card.target = "_blank";
+            card.rel = "noopener noreferrer";
             card.style.animationDelay = `${index * 0.1}s`;
 
             // Formatando Data
@@ -130,4 +152,149 @@ document.addEventListener("DOMContentLoaded", () => {
             grid.appendChild(card);
         });
     }
+
+    // Custom Autocomplete / Typeahead setup
+    function setupAutocomplete(inputId, suggestionsId) {
+        const input = document.getElementById(inputId);
+        const dropdown = document.getElementById(suggestionsId);
+        let items = [];
+        let activeIndex = -1;
+        let debounceTimer;
+
+        // Fetch suggestions from API
+        async function fetchSuggestions(query) {
+            try {
+                const response = await fetch(`/api/v1/flights/airports/search?q=${encodeURIComponent(query)}`);
+                if (!response.ok) throw new Error("API error");
+                return await response.json();
+            } catch (err) {
+                console.error("Error fetching suggestions:", err);
+                return [];
+            }
+        }
+
+        // Render dropdown list
+        function renderDropdown(suggestions) {
+            items = suggestions;
+            dropdown.innerHTML = "";
+            activeIndex = -1;
+
+            if (suggestions.length === 0) {
+                dropdown.classList.add("hidden");
+                return;
+            }
+
+            suggestions.forEach((item, index) => {
+                const div = document.createElement("div");
+                div.className = "suggestion-item";
+                div.setAttribute("data-index", index);
+                
+                div.innerHTML = `
+                    <div class="suggestion-info">
+                        <span class="suggestion-city-country">${item.city}, ${item.country}</span>
+                        <span class="suggestion-airport-name">${item.name}</span>
+                    </div>
+                    <span class="suggestion-code-badge">${item.code}</span>
+                `;
+
+                div.addEventListener("mousedown", (e) => {
+                    // Prevent input blur before click event registers selection
+                    e.preventDefault();
+                    selectItem(index);
+                });
+                dropdown.appendChild(div);
+            });
+
+            dropdown.classList.remove("hidden");
+        }
+
+        // Highlight selected suggestion (keyboard nav)
+        function updateActiveItem() {
+            const divs = dropdown.querySelectorAll(".suggestion-item");
+            divs.forEach((div, index) => {
+                if (index === activeIndex) {
+                    div.classList.add("active");
+                    div.scrollIntoView({ block: "nearest" });
+                } else {
+                    div.classList.remove("active");
+                }
+            });
+        }
+
+        // Handle item selection
+        function selectItem(index) {
+            if (index >= 0 && index < items.length) {
+                const selected = items[index];
+                input.value = `${selected.city} (${selected.name}) - ${selected.code}`;
+                dropdown.classList.add("hidden");
+                dropdown.innerHTML = "";
+                activeIndex = -1;
+            }
+        }
+
+        // Event listener for typing
+        input.addEventListener("input", () => {
+            clearTimeout(debounceTimer);
+            const query = input.value.trim();
+
+            if (query.length < 1) {
+                dropdown.classList.add("hidden");
+                dropdown.innerHTML = "";
+                return;
+            }
+
+            debounceTimer = setTimeout(async () => {
+                const suggestions = await fetchSuggestions(query);
+                renderDropdown(suggestions);
+            }, 150); // 150ms debounce
+        });
+
+        // Event listener for keyboard navigation
+        input.addEventListener("keydown", (e) => {
+            if (dropdown.classList.contains("hidden")) return;
+
+            const divs = dropdown.querySelectorAll(".suggestion-item");
+            if (divs.length === 0) return;
+
+            if (e.key === "ArrowDown") {
+                e.preventDefault();
+                activeIndex = (activeIndex + 1) % divs.length;
+                updateActiveItem();
+            } else if (e.key === "ArrowUp") {
+                e.preventDefault();
+                activeIndex = (activeIndex - 1 + divs.length) % divs.length;
+                updateActiveItem();
+            } else if (e.key === "Enter") {
+                if (activeIndex >= 0 && activeIndex < divs.length) {
+                    e.preventDefault();
+                    selectItem(activeIndex);
+                }
+            } else if (e.key === "Escape") {
+                dropdown.classList.add("hidden");
+                activeIndex = -1;
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener("click", (e) => {
+            if (e.target !== input && !dropdown.contains(e.target)) {
+                dropdown.classList.add("hidden");
+                activeIndex = -1;
+            }
+        });
+
+        // Show suggestions on focus if there is text
+        input.addEventListener("focus", async () => {
+            const query = input.value.trim();
+            // Don't show if it's already a full formatted string
+            if (query && !query.includes(" - ")) {
+                const suggestions = await fetchSuggestions(query);
+                renderDropdown(suggestions);
+            }
+        });
+    }
+
+    // Initialize Autocomplete for Origin and Destination fields
+    setupAutocomplete("origin", "origin-suggestions");
+    setupAutocomplete("destination", "destination-suggestions");
 });

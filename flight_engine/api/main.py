@@ -23,7 +23,7 @@ from infrastructure.collectors.tap_collector import TapCollector
 from factories.http_client_factory import HttpClientFactory
 from events.handlers import register_handlers
 from jobs.scheduler import setup_scheduler
-from api.routes import flights, health, auth
+from api.routes import flights, health, auth, airports
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from core.security import limiter
@@ -78,6 +78,7 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 app.include_router(auth.router)
 app.include_router(flights.router)
 app.include_router(health.router)
+app.include_router(airports.router)
 
 import os
 os.makedirs("static", exist_ok=True)
