@@ -110,3 +110,34 @@ def scrape_and_cache_flights_task(origin: str, destination: str, departure_date_
         if result.stderr:
             logger.error(f"Subprocess stderr: {result.stderr.strip()}")
 
+@dramatiq.actor(max_retries=1)
+def update_hotels_task(city_code: str):
+    """
+    Background worker task that spawns a subprocess to scrape hotels for a given city
+    using populate_hotels.py script to avoid Playwright async context issues.
+    """
+    import subprocess
+    import sys
+    import os
+    
+    script_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "scripts", "populate_hotels.py")
+    python_exe = sys.executable
+    
+    logger.info(f"Dramatiq worker delegating hotel scrape for city {city_code} to external process...")
+    
+    # Run the scraper script as a subprocess synchronously
+    result = subprocess.run([
+        python_exe,
+        script_path,
+        "--city",
+        city_code
+    ], capture_output=True, text=True, check=False)
+    
+    if result.returncode == 0:
+        logger.info(f"Dramatiq worker successfully finished hotel scrape process for {city_code}")
+    else:
+        logger.error(f"Dramatiq worker hotel scraper process failed for {city_code} with exit code {result.returncode}")
+        if result.stderr:
+            logger.error(f"Subprocess stderr: {result.stderr.strip()}")
+
+

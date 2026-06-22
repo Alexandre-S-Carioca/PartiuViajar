@@ -55,10 +55,23 @@ async def check_price_alerts():
     except Exception as e:
         logger.error(f"Error checking price alerts: {e}")
 
+async def periodic_hotel_update():
+    logger.info("Running periodic_hotel_update job")
+    try:
+        from workers.tasks import update_hotels_task
+        # Default cities to scrape daily
+        target_cities = ["SAO", "RIO", "FOR", "BSB", "SSA"]
+        for city in target_cities:
+            logger.info(f"Dispatching update_hotels_task for {city}")
+            update_hotels_task.send(city)
+    except Exception as e:
+        logger.error(f"Error running periodic_hotel_update: {e}")
+
 def setup_scheduler():
     scheduler.add_job(periodic_price_update, 'interval', hours=1)
     scheduler.add_job(cache_cleanup, 'interval', hours=12)
     scheduler.add_job(history_cleanup, 'cron', day_of_week='sun', hour=3)
     scheduler.add_job(check_price_alerts, 'interval', minutes=10) # check alerts every 10 minutes for testing/PoC
+    scheduler.add_job(periodic_hotel_update, 'cron', hour=4, minute=0) # run daily at 4:00 AM
     scheduler.start()
     logger.info("Scheduler started")
