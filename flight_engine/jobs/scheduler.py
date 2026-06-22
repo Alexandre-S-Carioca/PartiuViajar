@@ -59,8 +59,13 @@ async def periodic_hotel_update():
     logger.info("Running periodic_hotel_update job")
     try:
         from workers.tasks import update_hotels_task
-        # Default cities to scrape daily
-        target_cities = ["SAO", "RIO", "FOR", "BSB", "SSA"]
+        # All 27 Brazilian capitals (using their primary airport IATA codes)
+        target_cities = [
+            "SAO", "RIO", "FOR", "BSB", "SSA", "CWB", "POA", 
+            "REC", "MAO", "BEL", "NAT", "MCZ", "FLN", "GYN",
+            "VIX", "CNF", "CGR", "CGB", "SLZ", "THE", "JPA", 
+            "AJU", "PMW", "PVH", "RBR", "BVB", "MCP"
+        ]
         for city in target_cities:
             logger.info(f"Dispatching update_hotels_task for {city}")
             update_hotels_task.send(city)
