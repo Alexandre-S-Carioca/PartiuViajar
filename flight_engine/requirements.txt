@@ -23,4 +23,5 @@ ruff==0.4.9
 mypy==1.10.0
 pre-commit==3.7.1
 playwright==1.60.0
-
+PyJWT==2.8.0
+slowapi==0.1.9
