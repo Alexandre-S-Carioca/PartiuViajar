@@ -1,6 +1,7 @@
 import asyncio
 from typing import List, Dict, Type
 from datetime import datetime
+from decimal import Decimal
 import json
 import logging
 from domain.entities import Flight

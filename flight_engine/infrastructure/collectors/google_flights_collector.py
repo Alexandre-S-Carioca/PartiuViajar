@@ -1,11 +1,33 @@
 from domain.entities import Flight
 from infrastructure.collectors.base_collector import BaseCollector
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
+import re
 from playwright.async_api import async_playwright
 
 logger = logging.getLogger(__name__)
+
+def parse_duration(s: str) -> int:
+    s = s.replace(" ", "").lower()
+    hours = 0
+    minutes = 0
+    match_h = re.search(r'(\d+)h', s)
+    if match_h:
+        hours = int(match_h.group(1))
+    match_m = re.search(r'(\d+)min', s)
+    if match_m:
+        minutes = int(match_m.group(1))
+    return hours * 60 + minutes
+
+def parse_stops_google(s: str) -> int:
+    s = s.lower().strip()
+    if "sem escalas" in s or "direto" in s or "sem escala" in s:
+        return 0
+    match = re.search(r'(\d+)\s*parada', s)
+    if match:
+        return int(match.group(1))
+    return 0
 
 class GoogleFlightsCollector(BaseCollector):
     def __init__(self):
@@ -47,41 +69,77 @@ class GoogleFlightsCollector(BaseCollector):
                         price_line = next((l for l in lines if "R$" in l), None)
                         if not price_line: continue
                         
-                        # Limpando o valor monetário: "R$ 1.500" -> "1500"
-                        price_str = price_line.replace("R$", "").replace(".", "").replace(",", ".").strip()
+                        price_str = price_line.replace("R$", "").replace(".", "").replace(",", ".").replace("\xa0", "").strip()
                         try:
                             price_val = Decimal(price_str)
                         except:
                             continue
                             
-                        # Extraindo a companhia aérea (geralmente é o texto logo após o horário)
-                        # Como o DOM é mutável, tentaremos pegar a primeira linha de texto que não seja hora nem delimitador
+                        # Extraindo a duração
+                        duration_val = 120  # fallback
+                        for line in lines:
+                            if re.search(r'^\d+\s*h(\s*\d+\s*min)?$', line) or re.search(r'^\d+\s*min$', line):
+                                duration_val = parse_duration(line)
+                                break
+                                
+                        # Extraindo paradas
+                        stops_val = 0
+                        for line in lines:
+                            if "escala" in line.lower() or "parada" in line.lower() or "direto" in line.lower():
+                                stops_val = parse_stops_google(line)
+                                break
+                                
+                        # Extraindo aeroportos de partida e destino reais da rota
+                        actual_origin = origin
+                        actual_destination = destination
+                        for line in lines:
+                            match = re.search(r'^([A-Z]{3})[^A-Za-z]+([A-Z]{3})$', line)
+                            if match:
+                                actual_origin = match.group(1)
+                                actual_destination = match.group(2)
+                                break
+                                
+                        # Extraindo horários reais e ajustando datas
+                        departure_datetime = departure_date
+                        if len(lines) > 0:
+                            time_match = re.search(r'(\d{2}):(\d{2})', lines[0])
+                            if time_match:
+                                hour = int(time_match.group(1))
+                                minute = int(time_match.group(2))
+                                departure_datetime = departure_date.replace(hour=hour, minute=minute)
+                                
+                        arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
+                        
+                        # Extraindo a companhia aérea
                         airline = "Unknown Airline"
                         for line in lines:
-                            is_time_or_dash = (":" in line and any(c.isdigit() for c in line)) or line in ("–", "-", "—")
-                            if not is_time_or_dash:
+                            is_time = (":" in line and any(c.isdigit() for c in line))
+                            is_duration = re.search(r'^\d+\s*h(\s*\d+\s*min)?$', line) or re.search(r'^\d+\s*min$', line)
+                            is_stops = "escala" in line.lower() or "parada" in line.lower() or "direto" in line.lower()
+                            is_route = re.search(r'^([A-Z]{3})[^A-Za-z]+([A-Z]{3})$', line)
+                            is_price = "R$" in line
+                            is_carbon = "co2" in line.lower() or "emiss" in line.lower()
+                            if not any([is_time, is_duration, is_stops, is_route, is_price, is_carbon, line == "–"]):
                                 airline = line
                                 break
                         
-                        # Limpando o nome da companhia aérea (ex: remover "Operado por...")
                         if "Operado" in airline:
                             airline = airline.split("Operado")[0].strip()
                         airline = airline.rstrip(",").strip()
                         
-                        # Impedir lixo de outras LIs (ex: rodapé)
                         if len(airline) > 30: continue
                             
                         flights.append(Flight(
                             airline=airline,
-                            origin=origin,
-                            destination=destination,
-                            departure_date=departure_date,
-                            arrival_date=departure_date, # Simplificado para PoC
+                            origin=actual_origin,
+                            destination=actual_destination,
+                            departure_date=departure_datetime,
+                            arrival_date=arrival_datetime,
                             price=price_val,
                             currency="BRL",
                             base_price_brl=price_val,
-                            duration=120, # Simplificado
-                            stops=0,
+                            duration=duration_val,
+                            stops=stops_val,
                             cabin_class="ECONOMY",
                             booking_url=url
                         ))
@@ -96,3 +154,4 @@ class GoogleFlightsCollector(BaseCollector):
                 await browser.close()
                 
         return flights
+

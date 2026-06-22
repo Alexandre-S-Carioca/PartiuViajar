@@ -3,121 +3,501 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Partiu Viajar</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>Partiu Viajar - Passagens e Hotéis em um só lugar</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Leaflet & Plugins CDNs -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet.markercluster@1.4.1/dist/MarkerCluster.Default.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@0.4.14/dist/leaflet.draw.css" />
+    
+    <!-- Custom Style -->
     <link rel="stylesheet" href="/static/style.css">
+    
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet.markercluster@1.4.1/dist/leaflet.markercluster.js"></script>
+    <script src="https://unpkg.com/leaflet-draw@0.4.14/dist/leaflet.draw.js"></script>
+    <script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 </head>
 <body>
-    <div class="background-mesh"></div>
-    <div class="container">
-        <header>
-            <h1>Partiu<span>Viajar</span></h1>
-            <p>O primeiro metabuscador de passagens em tempo real.</p>
-        </header>
-        
-        <main>
-            <section class="search-panel glass">
-                <form id="search-form">
-                    <div class="input-group autocomplete-wrapper">
-                        <label for="origin">Origem</label>
-                        <input type="text" id="origin" placeholder="Ex: FOR, São Paulo" autocomplete="off" required>
+    
+    <!-- Header Navigation Bar -->
+    <header class="top-nav">
+        <div class="nav-container">
+            <div class="logo">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="logo-plane-svg">
+                    <path d="M3.478 2.405a.75.75 0 00-.926.94l2.432 7.905H13.5a.75.75 0 010 1.5H4.984l-2.432 7.905a.75.75 0 00.926.94 60.519 60.519 0 0018.445-8.986.75.75 0 000-1.218A60.517 60.517 0 003.478 2.405z" />
+                </svg>
+                <div class="logo-text">
+                    <span class="logo-partiu">Partiu</span>
+                    <span class="logo-viajar">Viajar</span>
+                </div>
+            </div>
+            
+                <ul class="nav-menu">
+                    <li class="active">
+                        <a href="#" id="menu-flights">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                            Passagens
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" id="menu-hotels">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="nav-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 21h16.5M4.5 3h15M5.25 3v18m13.5-18v18M9 6.75h1.5m-1.5 3h1.5m-1.5 3H10.5m3-6H15m-3 3H15m-3 3H15M9 21v-3a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v3" /></svg>
+                            Hotéis
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            
+            <div class="nav-actions">
+                <button id="theme-toggle" class="theme-btn" title="Alternar Modo Escuro/Claro">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="moon-icon">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M21.752 15.002A9.718 9.718 0 0118 15.75c-5.385 0-9.75-4.365-9.75-9.75 0-1.33.266-2.597.748-3.752A9.753 9.753 0 003 11.25C3 16.635 7.365 21 12.75 21a9.753 9.753 0 009.002-5.998z" />
+                    </svg>
+                </button>
+                
+                <div class="user-profile" id="user-profile-menu">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=80&h=80&q=80" alt="Alexandre" class="user-avatar-img">
+                    <span class="user-name">Olá, Alexandre</span>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Search Banner Panel -->
+    <section class="search-panel-container">
+        <div class="search-panel-wrap">
+            <div class="search-tabs" id="search-tabs-container">
+                <button type="button" class="search-tab-pill active" id="tab-roundtrip">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                    Ida e Volta
+                </button>
+                <button type="button" class="search-tab-pill" id="tab-oneway">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12" /></svg>
+                    Só ida
+                </button>
+                <button type="button" class="search-tab-pill" id="tab-hotel" style="display:none;">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" style="width:13px;height:13px;vertical-align:middle;margin-right:3px"><path stroke-linecap="round" stroke-linejoin="round" d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25" /></svg>
+                    Somente Hotel
+                </button>
+            </div>
+            
+            <form id="search-form">
+                <div class="search-inputs-row">
+                    <!-- Origin input -->
+                    <div class="search-card autocomplete-wrapper" id="origin-card">
+                        <span class="search-card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="card-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M6 12 3.269 3.125A59.769 59.769 0 0 1 21.485 12 59.768 59.768 0 0 1 3.27 20.875L5.999 12Zm0 0h7.5" /></svg>
+                        </span>
+                        <div class="search-card-details">
+                            <label for="origin">Origem</label>
+                            <input type="text" id="origin" placeholder="Fortaleza (FOR)" autocomplete="off" required>
+                        </div>
                         <div id="origin-suggestions" class="suggestions-dropdown hidden"></div>
                     </div>
-                    <div class="input-group autocomplete-wrapper">
-                        <label for="destination">Destino</label>
-                        <input type="text" id="destination" placeholder="Ex: SCL, Santiago" autocomplete="off" required>
+                    
+                    <!-- Swap locations button -->
+                    <button type="button" id="btn-swap-locations" class="swap-locations-btn" title="Inverter origem e destino">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="swap-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M7.5 21 3 16.5m0 0L7.5 12M3 16.5h13.5m0-13.5L21 7.5m0 0L16.5 12M21 7.5H7.5" /></svg>
+                    </button>
+
+                    <!-- Destination input -->
+                    <div class="search-card autocomplete-wrapper">
+                        <span class="search-card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="card-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                        </span>
+                        <div class="search-card-details">
+                            <label for="destination">Destino</label>
+                            <input type="text" id="destination" placeholder="São Paulo (SAO)" autocomplete="off" required>
+                        </div>
                         <div id="destination-suggestions" class="suggestions-dropdown hidden"></div>
                     </div>
-                    <div class="input-group">
-                        <label for="departure_date">Data de Ida</label>
-                        <input type="date" id="departure_date" required>
+
+                    <!-- Date Departure input -->
+                    <div class="search-card">
+                        <span class="search-card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="card-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                        </span>
+                        <div class="search-card-details">
+                            <label for="departure_date">Ida</label>
+                            <input type="text" id="departure_date" placeholder="20/07/2026" required onfocus="(this.type='date')" onblur="(this.value ? this.type='text' : this.type='text')">
+                        </div>
                     </div>
-                    <div class="input-group">
-                        <label for="return_date">Data de Volta (Opcional)</label>
-                        <input type="date" id="return_date">
+
+                    <!-- Date Return input -->
+                    <div class="search-card" id="return-date-card">
+                        <span class="search-card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="card-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" /></svg>
+                        </span>
+                        <div class="search-card-details">
+                            <label for="return_date">Volta</label>
+                            <input type="text" id="return_date" placeholder="24/07/2026" onfocus="(this.type='date')" onblur="(this.value ? this.type='text' : this.type='text')">
+                        </div>
                     </div>
-                    <div class="input-group btn-group-row">
-                        <button type="submit" id="search-btn">Buscar Voos</button>
-                        <button type="button" id="open-alert-btn" class="secondary-btn" title="Criar Alerta de Preço">🔔 Alerta</button>
+
+                    <!-- Passengers input -->
+                    <div class="search-card">
+                        <span class="search-card-icon">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="card-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" /></svg>
+                        </span>
+                        <div class="search-card-details">
+                            <label for="adults">Passageiros</label>
+                            <input type="number" id="adults" min="1" max="9" value="1" required>
+                        </div>
                     </div>
-                </form>
-            </section>
+
+                    <!-- Search Button -->
+                    <button type="submit" id="search-btn" class="search-primary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2.2" stroke="currentColor" class="search-btn-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.637 10.637z" /></svg>
+                        Buscar viagem
+                    </button>
+                    
+                    <!-- Hide/show alert modal triggers are separate now -->
+                    <button type="button" id="open-alert-btn" class="hidden-alert-trigger hidden"></button>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <!-- Main Content Container -->
+    <div class="app-layout">
+        <div class="dashboard-grid">
             
-            <section class="results-panel">
-                <!-- Smart Combo Section -->
-                <div id="smart-combo-container" class="hidden">
-                    <!-- Dynamic Smart Combo Card will render here -->
+            <!-- COLUMN 1: SIDEBAR FILTERS (White background) -->
+            <aside class="sidebar-column scrollable">
+                <div class="sidebar-header">
+                    <h2>Filtros</h2>
+                    <a href="#" class="clear-filters-btn" id="btn-clear-filters">Limpar tudo</a>
                 </div>
-
-                <div id="results-layout" class="results-layout">
-                    <!-- Sidebar Filters -->
-                    <aside id="filters-sidebar" class="filters-sidebar glass hidden">
-                        <h3>Filtrar Resultados</h3>
-                        
-                        <div class="filter-group">
-                            <label>Ordenação</label>
-                            <div class="sort-buttons">
-                                <button type="button" class="sort-btn active" data-sort="price">Mais Barato</button>
-                                <button type="button" class="sort-btn" data-sort="duration">Mais Rápido</button>
-                                <button type="button" class="sort-btn" data-sort="stops">Paradas</button>
-                            </div>
+                
+                <!-- SECTION: FLIGHT FILTERS -->
+                <div class="filter-section" id="flights-filters-section">
+                    <h3 class="section-title">Passagens</h3>
+                    
+                    <!-- Airlines -->
+                    <div class="filter-group">
+                        <label>Companhias</label>
+                        <div class="checkbox-list">
+                            <label class="custom-checkbox flex-between">
+                                <div>
+                                    <input type="checkbox" name="airline-filter" value="Latam" checked>
+                                    <span class="checkmark"></span> Latam
+                                </div>
+                                <span class="filter-price-badge">R$ 430</span>
+                            </label>
+                            <label class="custom-checkbox flex-between">
+                                <div>
+                                    <input type="checkbox" name="airline-filter" value="Gol" checked>
+                                    <span class="checkmark"></span> Gol
+                                </div>
+                                <span class="filter-price-badge">R$ 458</span>
+                            </label>
+                            <label class="custom-checkbox flex-between">
+                                <div>
+                                    <input type="checkbox" name="airline-filter" value="Azul" checked>
+                                    <span class="checkmark"></span> Azul
+                                </div>
+                                <span class="filter-price-badge">R$ 472</span>
+                            </label>
+                            <label class="custom-checkbox flex-between">
+                                <div>
+                                    <input type="checkbox" name="airline-filter" value="Avianca" checked>
+                                    <span class="checkmark"></span> Avianca
+                                </div>
+                                <span class="filter-price-badge">R$ 499</span>
+                            </label>
                         </div>
-
-                        <div class="filter-group">
-                            <label>Escalas Máximas</label>
-                            <select id="filter-stops">
-                                <option value="any">Qualquer escala</option>
-                                <option value="0">Apenas voos diretos (0)</option>
-                                <option value="1">No máximo 1 escala</option>
-                            </select>
+                    </div>
+                    
+                    <!-- Stops -->
+                    <div class="filter-group">
+                        <label>Escalas</label>
+                        <div class="checkbox-list">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stops-filter" value="0" checked>
+                                <span class="checkmark"></span> Direto
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stops-filter" value="1" checked>
+                                <span class="checkmark"></span> 1 escala
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stops-filter" value="2" checked>
+                                <span class="checkmark"></span> 2+ escalas
+                            </label>
                         </div>
+                    </div>
+                    
+                    <!-- Outbound hour range -->
+                    <div class="filter-group">
+                        <label class="flex-between">Horários da ida <span>00:00 - 23:59</span></label>
+                        <input type="range" id="filter-flight-hour-dep" min="0" max="23" value="23" class="custom-slider">
+                        <span class="range-display hidden">Até <span id="dep-hour-display">23:59</span></span>
+                    </div>
+                    
+                    <!-- Inbound hour range -->
+                    <div class="filter-group">
+                        <label class="flex-between">Horários da volta <span>00:00 - 23:59</span></label>
+                        <input type="range" id="filter-flight-hour-arr" min="0" max="23" value="23" class="custom-slider">
+                        <span class="range-display hidden">Até <span id="arr-hour-display">23:59</span></span>
+                    </div>
 
-                        <div class="filter-group">
-                            <label>Preço Máximo: <span id="price-limit-val">R$ 10.000</span></label>
-                            <input type="range" id="filter-price" min="0" max="10000" step="50" value="10000">
-                        </div>
-
-                        <div class="filter-group">
-                            <label>Companhias Aéreas</label>
-                            <div id="filter-airlines-list" class="checkbox-group">
-                                <!-- Dynamic checkboxes -->
-                            </div>
-                        </div>
-                    </aside>
-
-                    <!-- Main Results Area -->
-                    <div class="results-main">
-                        <div id="loader" class="hidden">
-                            <div class="spinner"></div>
-                            <p>Buscando nas companhias aéreas em tempo real...</p>
-                        </div>
-                        <div class="grid" id="flights-grid">
-                            <!-- Cards de voos aparecerão aqui via JS -->
+                    <!-- Baggage -->
+                    <div class="filter-group">
+                        <label>Bagagem</label>
+                        <div class="checkbox-list">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" id="baggage-hand" checked>
+                                <span class="checkmark"></span> Bagagem de mão
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" id="baggage-checked">
+                                <span class="checkmark"></span> Bagagem despachada
+                            </label>
                         </div>
                     </div>
                 </div>
-            </section>
-        </main>
-    </div>
+                
+                <hr class="separator" id="filters-separator">
+                
+                <!-- SECTION: HOTEL FILTERS -->
+                <div class="filter-section" id="hotels-filters-section">
+                    <h3 class="section-title">Hotéis</h3>
+                    
+                    <!-- Night price -->
+                    <div class="filter-group">
+                        <label class="flex-between">Preço por noite <span>R$ 0 - <span id="hotel-price-val">R$ 1.000+</span></span></label>
+                        <input type="range" id="filter-hotel-price" min="50" max="1500" step="25" value="1500" class="custom-slider">
+                    </div>
+                    
+                    <!-- Stars Rating -->
+                    <div class="filter-group">
+                        <label>Avaliação</label>
+                        <div class="checkbox-list">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stars-filter" value="5" checked>
+                                <span class="checkmark"></span>
+                                <span class="stars-gold">★★★★★</span>
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stars-filter" value="4" checked>
+                                <span class="checkmark"></span>
+                                <span class="stars-gold">★★★★</span> ou mais
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stars-filter" value="3" checked>
+                                <span class="checkmark"></span>
+                                <span class="stars-gold">★★★</span> ou mais
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stars-filter" value="2" checked>
+                                <span class="checkmark"></span>
+                                <span class="stars-gold">★★</span> ou mais
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" name="stars-filter" value="1" checked>
+                                <span class="checkmark"></span>
+                                <span class="stars-gold">★</span> ou mais
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Amenities -->
+                    <div class="filter-group">
+                        <label>Comodidades</label>
+                        <div class="checkbox-list">
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Wi-Fi">
+                                <span class="checkmark"></span> Wi-Fi
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Café da manhã">
+                                <span class="checkmark"></span> Café da manhã
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Piscina">
+                                <span class="checkmark"></span> Piscina
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Estacionamento">
+                                <span class="checkmark"></span> Estacionamento
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Academia">
+                                <span class="checkmark"></span> Academia
+                            </label>
+                            <label class="custom-checkbox">
+                                <input type="checkbox" class="amenity-checkbox" value="Ar condicionado">
+                                <span class="checkmark"></span> Ar condicionado
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- COLUMN 2: CENTRAL RESULTS AREA -->
+            <main class="results-column scrollable">
+                <div id="results-loader" class="hidden">
+                    <div class="spinner"></div>
+                    <p>Integrando voos e hospedagens em tempo real...</p>
+                </div>
+                
+                <div class="results-container">
+                    
+                    <!-- Section: Flights -->
+                    <section class="results-section" id="section-flights-results">
+                        <div class="section-header">
+                            <div class="section-title-wrap">
+                                <h3 id="flights-list-title">Passagens para São Paulo</h3>
+                                <span class="results-count" id="flights-count-text">(32 opções encontradas)</span>
+                            </div>
+                            <div class="sorting-controls">
+                                <span class="sort-label">Ordenar por:</span>
+                                <select id="flight-sort-select" class="custom-sort-select">
+                                    <option value="price">Menor preço</option>
+                                    <option value="duration">Mais rápido</option>
+                                    <option value="stops">Menos escalas</option>
+                                </select>
+                                
+                                <!-- Keep original buttons hidden to not break JS mapping -->
+                                <button type="button" class="sort-tab active hidden" data-sort="price"></button>
+                                <button type="button" class="sort-tab hidden" data-sort="duration"></button>
+                                <button type="button" class="sort-tab hidden" data-sort="stops"></button>
+                            </div>
+                        </div>
+                        
+                        <!-- Smart Combo Recommendation Box -->
+                        <div id="smart-combo-container" class="hidden"></div>
+                        
+                        <div class="flights-list-grid" id="flights-list-view">
+                            <div class="no-results">Faça uma busca para ver as passagens aéreas disponíveis.</div>
+                        </div>
+                    </section>
+                    
+                    <!-- Section: Accommodations -->
+                    <section class="results-section" id="section-hotels-results">
+                        <div class="section-header">
+                            <div class="section-title-wrap">
+                                <h3 id="hotels-list-title">Hotéis em São Paulo</h3>
+                                <span class="results-count" id="hotels-count-text">(120 opções encontradas)</span>
+                            </div>
+                            <div class="sorting-controls">
+                                <span class="sort-label">Ordenar por:</span>
+                                <select id="hotel-sort-select" class="custom-sort-select">
+                                    <option value="rating">Melhor avaliação</option>
+                                    <option value="price_asc">Menor preço</option>
+                                    <option value="price_desc">Maior preço</option>
+                                </select>
+                                
+                                <!-- Keep original type tabs hidden to not break JS type filter mapping -->
+                                <div class="lodging-type-tabs hidden">
+                                    <button class="type-tab active" data-type="all"></button>
+                                    <button class="type-tab" data-type="hotel"></button>
+                                    <button class="type-tab" data-type="pousada"></button>
+                                    <button class="type-tab" data-type="hostel"></button>
+                                    <button class="type-tab" data-type="resort"></button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accommodations-list-grid" id="accommodations-list-view">
+                            <div class="no-results">Faça uma busca para ver as hospedagens na região.</div>
+                        </div>
+                        
+                        <div class="load-more-hotels-wrap">
+                            <button type="button" id="btn-load-more-hotels" class="load-more-btn">Ver mais hotéis</button>
+                        </div>
+                    </section>
+                </div>
+            </main>
+            
+            <!-- COLUMN 3: MAP & TRAVEL SUMMARY -->
+            <section class="map-column">
+                
+                <!-- Map Widget Box -->
+                <div class="map-box-container">
+                    <div class="map-box-header">
+                        <div class="map-header-left">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="map-header-icon"><path stroke-linecap="round" stroke-linejoin="round" d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z" /><path stroke-linecap="round" stroke-linejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z" /></svg>
+                            <h4>Hotéis e Pousadas no mapa</h4>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" class="info-icon" title="O mapa exibe preços na moeda local."><path stroke-linecap="round" stroke-linejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 111.063.852l-.708 2.836a.75.75 0 001.063.852l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" /></svg>
+                        </div>
+                        <div class="map-header-right">
+                            <label class="map-sync-label">
+                                <input type="checkbox" id="map-sync-move" checked>
+                                <span class="map-sync-check"></span>
+                                Atualizar ao mover o mapa
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Map Widget -->
+                    <div class="map-container-wrapper">
+                        <div id="leaflet-map-widget"></div>
+                    </div>
+                    
+                    <!-- Inline controls kept for feature integrity -->
+                    <div class="map-filters-inline hidden">
+                        <input type="checkbox" id="show-map-hotel" checked>
+                        <input type="checkbox" id="show-map-pousada" checked>
+                        <input type="checkbox" id="show-map-hostel" checked>
+                        <input type="checkbox" id="show-map-resort" checked>
+                    </div>
+                    <div class="map-actions-row hidden">
+                        <button class="map-toggle-heatmap" id="btn-toggle-heatmap"></button>
+                        <button class="map-expand-btn" id="btn-expand-map"></button>
+                    </div>
+                    
+                    <!-- Pricing range legend at the bottom of the map card -->
+                    <div class="map-legend">
+                        <div class="legend-item"><span class="legend-dot green"></span>Até R$ 150</div>
+                        <div class="legend-item"><span class="legend-dot yellow"></span>R$ 150 - 250</div>
+                        <div class="legend-item"><span class="legend-dot orange"></span>R$ 250 - 400</div>
+                        <div class="legend-item"><span class="legend-dot red"></span>Acima de R$ 400</div>
+                    </div>
+                </div>
 
-    <!-- Modal Histórico de Preços -->
+
+            </section>
+        </div>
+    </div>
+    
+
+    <!-- Modal: Search History & Favorites -->
+    <div id="history-favorites-modal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-modal" id="close-history-fav-modal">&times;</span>
+            <div class="modal-tabs">
+                <button class="modal-tab active" id="tab-show-history">Histórico de Buscas</button>
+                <button class="modal-tab" id="tab-show-favorites">Meus Favoritos</button>
+            </div>
+            <div class="modal-body-content scrollable" id="modal-list-content">
+                <!-- Dynamically loaded -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: Price History Chart (Chart.js) -->
     <div id="history-modal" class="modal hidden">
-        <div class="modal-content glass">
+        <div class="modal-content">
             <span class="close-modal" id="close-history-modal">&times;</span>
             <h2>Histórico de Preços</h2>
-            <p id="history-route-title" style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;"></p>
-            <div class="chart-container" style="position: relative; height:250px; width:100%">
+            <p id="history-route-title" class="text-muted"></p>
+            <div class="chart-container">
                 <canvas id="price-history-chart"></canvas>
             </div>
         </div>
     </div>
 
-    <!-- Modal Criar Alerta -->
+    <!-- Modal: Create Price Alert -->
     <div id="alert-modal" class="modal hidden">
-        <div class="modal-content glass">
+        <div class="modal-content">
             <span class="close-modal" id="close-alert-modal">&times;</span>
             <h2>Criar Alerta de Preço</h2>
-            <p style="color: var(--text-muted); margin-bottom: 1.5rem; font-size: 0.95rem;">Seja notificado por e-mail ou Telegram assim que o preço para este trecho cair abaixo do seu limite.</p>
+            <p class="text-muted">Seja notificado assim que o valor desta viagem atingir o seu preço alvo.</p>
             <form id="alert-form">
                 <div class="form-group-alert">
                     <label for="alert-email">Seu E-mail</label>
@@ -138,6 +518,7 @@
         </div>
     </div>
 
-    <script src="/static/app.js"></script>
+    <!-- Script Entrypoint -->
+    <script src="/static/app.js?v=6"></script>
 </body>
 </html>

@@ -1,11 +1,37 @@
 from domain.entities import Flight
 from infrastructure.collectors.base_collector import BaseCollector
-from datetime import datetime
+from datetime import datetime, timedelta
 from decimal import Decimal
 import logging
+import re
 from playwright.async_api import async_playwright
 
 logger = logging.getLogger(__name__)
+
+def parse_duration(s: str) -> int:
+    s = s.replace(" ", "").lower()
+    hours = 0
+    minutes = 0
+    match_h = re.search(r'(\d+)h', s)
+    if match_h:
+        hours = int(match_h.group(1))
+    match_m = re.search(r'(\d+)min', s)
+    if match_m:
+        minutes = int(match_m.group(1))
+    return hours * 60 + minutes
+
+def is_stops_line(s: str) -> bool:
+    s = s.lower().strip()
+    return bool(re.search(r'^\d+\s*escala', s) or s == "direto" or s.startswith("sem escala") or s.endswith("escalas"))
+
+def parse_stops(s: str) -> int:
+    s = s.lower().strip()
+    if "direto" in s or "sem escala" in s:
+        return 0
+    match = re.search(r'(\d+)\s*escala', s)
+    if match:
+        return int(match.group(1))
+    return 0
 
 class KayakCollector(BaseCollector):
     def __init__(self):
@@ -39,19 +65,62 @@ class KayakCollector(BaseCollector):
                 content = await page.evaluate("document.body.innerText")
                 lines = [line.strip() for line in content.split('\n') if line.strip()]
                 
-                # Lógica rudimentar de extração para o PoC: 
+                # Lógica de extração:
                 # Buscamos as linhas que começam com R$
                 for i, line in enumerate(lines):
                     if line.startswith("R$") and len(line) < 15:
-                        price_str = line.replace("R$", "").replace(".", "").replace(",", ".").strip()
+                        price_str = line.replace("R$", "").replace(".", "").replace(",", ".").replace("\xa0", "").strip()
                         try:
                             price_val = Decimal(price_str)
                             
+                            # Buscar retroativamente detalhes: duração, escalas, aeroportos
+                            duration_val = 180  # fallback
+                            stops_val = 1      # fallback
+                            actual_origin = origin
+                            actual_destination = destination
+                            departure_datetime = departure_date
+                            
+                            search_range = range(max(0, i - 15), i)
+                            
+                            # Duração
+                            for j in reversed(search_range):
+                                cand = lines[j]
+                                if re.search(r'^\d+h(\s*\d+min)?$', cand) or re.search(r'^\d+min$', cand):
+                                    duration_val = parse_duration(cand)
+                                    break
+                            
+                            # Escalas
+                            for j in reversed(search_range):
+                                cand = lines[j]
+                                if is_stops_line(cand):
+                                    stops_val = parse_stops(cand)
+                                    break
+                                    
+                            # Aeroportos de partida e destino reais
+                            for j in reversed(search_range):
+                                if lines[j] == "-":
+                                    dep_cand = lines[j-1]
+                                    dest_cand = lines[j+1]
+                                    if len(dep_cand) >= 3 and dep_cand[:3].isupper() and dep_cand[:3].isalpha():
+                                        actual_origin = dep_cand[:3]
+                                    if len(dest_cand) >= 3 and dest_cand[:3].isupper() and dest_cand[:3].isalpha():
+                                        actual_destination = dest_cand[:3]
+                                    break
+                                    
+                            # Horário exato de partida
+                            for j in reversed(search_range):
+                                if re.search(r'\d{1,2}:\d{2}\s*.\s*\d{1,2}:\d{2}', lines[j]):
+                                    times = re.findall(r'(\d{1,2}):(\d{2})', lines[j])
+                                    if len(times) >= 2:
+                                        dep_hour, dep_min = map(int, times[0])
+                                        departure_datetime = departure_date.replace(hour=dep_hour, minute=dep_min)
+                                    break
+                                    
+                            arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
+
                             # Tenta pegar um provável nome de companhia nas linhas anteriores.
-                            # O Kayak mostra a companhia aérea na linha imediatamente antes do preço (i-1)
-                            # ou nas linhas anteriores a ela, se houver anúncios/tags intermediárias.
                             airline_candidate = "Múltiplas/Kayak"
-                            for offset in range(1, 5):
+                            for offset in range(1, 10):
                                 idx_cand = i - offset
                                 if idx_cand < 0:
                                     break
@@ -64,24 +133,31 @@ class KayakCollector(BaseCollector):
                                     "Anúncio" in cand or 
                                     "Anuncio" in cand or 
                                     cand == "|" or 
+                                    cand == "-" or
                                     cand.startswith("R$") or
-                                    any(x in cand for x in ["Ver oferta", "Basic", "Pinto Martins", "Internacional"])
+                                    any(x in cand.lower() for x in ["ver oferta", "basic", "pinto martins", "internacional", "selecionar", "econômica", "economica", "plus", "direto"])
+                                    or (len(cand) >= 3 and cand[:3].isupper() and cand[:3].isalpha() and len(cand) > 3 and cand[3].islower())
                                 ):
                                     continue
                                 airline_candidate = cand
                                 break
                                 
+                            # Validar se o voo é válido
+                            bad_airlines = ["direto", "escala", "parada", "fortaleza", "santiago", "pinto martins", "arturo merino", "selecionar", "basic", "plus", "econômica", "economica", "oferta", "decolar", "todas as"]
+                            if any(x in airline_candidate.lower() for x in bad_airlines) or len(airline_candidate) > 30:
+                                continue
+
                             flights.append(Flight(
                                 airline=airline_candidate,
-                                origin=origin,
-                                destination=destination,
-                                departure_date=departure_date,
-                                arrival_date=departure_date,
+                                origin=actual_origin,
+                                destination=actual_destination,
+                                departure_date=departure_datetime,
+                                arrival_date=arrival_datetime,
                                 price=price_val,
                                 currency="BRL",
                                 base_price_brl=price_val,
-                                duration=180, # Fixo para PoC
-                                stops=1,      # Fixo para PoC
+                                duration=duration_val,
+                                stops=stops_val,
                                 cabin_class="ECONOMY",
                                 booking_url=url
                             ))
@@ -89,6 +165,7 @@ class KayakCollector(BaseCollector):
                             if len(flights) >= 5: # Limitando a 5 resultados
                                 break
                         except Exception as parse_e:
+                            logger.error(f"[{self.name}] Erro no parse de voo: {parse_e}")
                             continue
                             
             except Exception as e:
@@ -97,3 +174,4 @@ class KayakCollector(BaseCollector):
                 await browser.close()
                 
         return flights
+

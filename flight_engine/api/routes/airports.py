@@ -11,3 +11,10 @@ async def search_airports(q: str = Query("", description="Query text to search a
     Returns a list of matching airports (maximum 8 results).
     """
     return airport_service.search(q)
+
+@router.get("/cities/search", response_model=List[Dict[str, str]])
+async def search_cities(q: str = Query("", description="Query text to search cities")):
+    """
+    Search for unique cities worldwide matching a given query.
+    """
+    return airport_service.search_cities(q)

@@ -12,7 +12,15 @@ class Settings(BaseSettings):
     HTTP_TIMEOUT: int = 5
 
     # Database
-    DATABASE_URL: str = "postgresql+asyncpg://alexandre:123456@192.168.0.150:5432/flights_db"
+    DB_USER: str = "alexandre"
+    DB_PASSWORD: str = "123456"
+    DB_HOST: str = "192.168.0.150"
+    DB_PORT: str = "5432"
+    DB_NAME: str = "partiu_viajar"
+
+    @property
+    def DATABASE_URL(self) -> str:
+        return f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}@{self.DB_HOST}:{self.DB_PORT}/{self.DB_NAME}"
 
     # Redis
     REDIS_URL: str = "redis://192.168.0.150:6379/0"

@@ -15,6 +15,7 @@ from infrastructure.collectors.copa_collector import CopaCollector
 from infrastructure.collectors.avianca_collector import AviancaCollector
 from infrastructure.collectors.tap_collector import TapCollector
 from infrastructure.collectors.google_flights_collector import GoogleFlightsCollector
+from infrastructure.collectors.kayak_collector import KayakCollector
 
 # Registrando os coletores (como faríamos no startup do FastAPI)
 registry.register(LatamCollector())
@@ -24,6 +25,7 @@ registry.register(CopaCollector())
 registry.register(AviancaCollector())
 registry.register(TapCollector())
 registry.register(GoogleFlightsCollector())
+registry.register(KayakCollector())
 
 async def run_test():
     try:

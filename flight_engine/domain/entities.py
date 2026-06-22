@@ -28,3 +28,30 @@ class Flight:
             # Unique key for a specific flight route, schedule, and flight properties (airline, stops, duration)
             key = f"{self.airline}:{self.origin}:{self.destination}:{dep_str}:{self.duration}:{self.stops}".lower()
             self.id = hashlib.md5(key.encode()).hexdigest()
+
+
+@dataclass(slots=True)
+class Accommodation:
+    name: str
+    type: str  # 'hotel', 'pousada', 'hostel', 'resort'
+    rating: float
+    stars: int
+    reviews_count: int
+    latitude: float
+    longitude: float
+    price_per_night: Decimal
+    photo_url: str
+    amenities: list[str]
+    city: str
+    distance_center: float
+    distance_airport: float
+    distance_beach: float | None = None
+    distance_sightseeing: float | None = None
+    id: str | None = None
+
+    def __post_init__(self):
+        if not self.id:
+            import hashlib
+            key = f"{self.type}:{self.city}:{self.name}:{self.latitude}:{self.longitude}".lower()
+            self.id = hashlib.md5(key.encode()).hexdigest()
+
