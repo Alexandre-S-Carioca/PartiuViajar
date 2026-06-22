@@ -1,0 +1,65 @@
+name: Run Tests on Label
+
+on:
+  pull_request:
+    types: [opened, synchronize, labeled]
+
+jobs:
+  test:
+    name: Run Pytest
+    if: contains(github.event.pull_request.labels.*.name, 'test') || contains(github.event.pull_request.labels.*.name, 'manual')
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: alexandre
+          POSTGRES_PASSWORD: password123
+          POSTGRES_DB: flights_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: 'flight_engine/requirements.txt'
+
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        working-directory: flight_engine
+
+      - name: Install Playwright Browsers
+        run: playwright install --with-deps chromium
+        working-directory: flight_engine
+
+      - name: Run Tests
+        env:
+          DATABASE_URL: postgresql+asyncpg://alexandre:password123@localhost:5432/flights_db
+          REDIS_URL: redis://localhost:6379/0
+          DEBUG: "True"
+        run: pytest
+        working-directory: flight_engine
