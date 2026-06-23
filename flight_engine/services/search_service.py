@@ -61,7 +61,7 @@ class SearchService:
 
         # Cache Stampede Protection
         lock_name = f"lock:{cache_key}"
-        async with cache_service.lock(lock_name, timeout=15) as acquired:
+        async with cache_service.lock(lock_name, timeout=60) as acquired:
             if not acquired:
                 # Se não conseguiu o lock, aguarda e tenta o cache novamente
                 # Um fluxo real poderia usar pub/sub ou polling. Aqui usaremos um pequeno delay.
@@ -129,7 +129,7 @@ class SearchService:
         await event_bus.publish("CacheMiss", {"cache_key": cache_key})
 
         lock_name = f"lock:{cache_key}"
-        async with cache_service.lock(lock_name, timeout=15) as acquired:
+        async with cache_service.lock(lock_name, timeout=60) as acquired:
             if not acquired:
                 # Polling for cache as another thread is doing the work
                 for _ in range(5):

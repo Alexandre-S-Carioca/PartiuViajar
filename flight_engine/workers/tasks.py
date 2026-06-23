@@ -29,7 +29,15 @@ logger = logging.getLogger(__name__)
 
 async def save_flights_async(flights_data: List[dict]):
     """Save collected flights to Postgres database using merge (upsert)."""
-    async with AsyncSessionLocal() as session:
+    from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
+    from core.config import settings
+    
+    # Create an engine specific to this thread's event loop
+    local_engine = create_async_engine(settings.DATABASE_URL, pool_size=5, max_overflow=5)
+    LocalAsyncSession = async_sessionmaker(local_engine, class_=AsyncSession, expire_on_commit=False)
+    
+    try:
+        async with LocalAsyncSession() as session:
         for f in flights_data:
             # Parse dates and decimal prices
             dep_date = datetime.fromisoformat(f["departure_date"])
@@ -69,6 +77,8 @@ async def save_flights_async(flights_data: List[dict]):
             
         await session.commit()
         logger.info(f"Saved {len(flights_data)} flights to DB.")
+    finally:
+        await local_engine.dispose()
 
 @dramatiq.actor(max_retries=3)
 def save_flights_task(flights_data: List[dict]):

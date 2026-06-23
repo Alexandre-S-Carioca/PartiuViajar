@@ -75,6 +75,18 @@ Buscador/
 
 ## 💻 Como Rodar o Projeto Localmente
 
+### Usando Docker (Recomendado)
+A maneira mais fácil de rodar todo o ambiente (API, Worker, Redis e Postgres) é utilizando o Docker Compose.
+Na pasta raiz do projeto, execute o comando abaixo para construir as imagens e iniciar os containers em segundo plano:
+```bash
+docker-compose up -d --build
+```
+Sempre que fizer alterações no código (como atualizações de frontend ou backend), rode este mesmo comando para atualizar e reiniciar as instâncias.
+
+---
+
+### Execução Manual sem Docker (Para Desenvolvimento)
+
 ### Pré-requisitos
 * Python 3.11 ou superior instalado.
 * Banco de dados PostgreSQL configurado.
