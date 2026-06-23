@@ -84,3 +84,23 @@ A grande vantagem do sistema é a busca reativa assíncrona que não faz o usuá
 * **Taxas de Limite (Rate Limiting):** A API utiliza o middleware `slowapi` (`core/security.py`) limitando endpoints cruciais como busca e streaming a **5 requisições por minuto** por usuário/IP, prevenindo abusos.
 * **Isolamento de Falhas (Anti-Corruption Layer - ACL):** Os coletores convertem diferentes estruturas de resposta (como as respostas eur/usd/brl de APIs parceiras) para a entidade de domínio `Flight` através de adaptadores específicos (ex: `CopaAdapter`, `TapAdapter`). O `currency_service` é utilizado para converter dinamicamente moedas estrangeiras para BRL.
 * **Recuperação de Erros nos Scrapers:** Cada tarefa de scraping e cache possui um mecanismo de tentativas (`max_retries=2` ou `max_retries=3`) gerenciado pelo Dramatiq. Se um scraping falhar devido ao bloqueio ou lentidão de rede, a tarefa é colocada na fila para reexecução automática.
+
+---
+
+## 🔐 Atualizações Recentes e Autenticação (23 de Junho de 2026, 17:15)
+
+Hoje a arquitetura do projeto foi significativamente expandida para suportar Autenticação e Hospedagem em Produção:
+
+### 6. Sistema de Contas e OAuth2 (Google e Facebook)
+* **Login Social Seguro:** O sistema agora possui integração total com Google Cloud e Facebook Developers para login via OAuth2, dispensando a necessidade de gerenciamento de senhas locais.
+* **Tokens JWT Assinados:** Após a verificação com as redes sociais, o backend gera um `JSON Web Token` (JWT) válido por 7 dias, contendo nome, e-mail e avatar do usuário.
+* **Persistência no PostgreSQL:** Todos os usuários são automaticamente cadastrados ou logados através do `UserModel`, criando uma base de dados unificada para o Partiu Viajar.
+
+### 7. Proteção de Rotas e UI Dinâmica (Visitante vs Usuário)
+* **Conteúdo Premium Fechado:** Módulos como Histórico de Buscas, Destinos Salvos e Alertas de Preço foram bloqueados para não-autenticados. 
+* **Call To Action (CTA):** Visitantes têm acesso ao buscador principal e às rotinas gratuitas, mas são convidados por uma interface atrativa a desbloquear os limites ilimitados da plataforma fazendo um cadastro rápido e gratuito.
+
+### 8. Deploy em Produção
+* **Docker Compose de Produção:** O projeto foi adaptado para ser facilmente implantado em um servidor VPS limpo.
+* **Rotas Dinâmicas de Redirecionamento:** O backend passou a ler a variável `SITE_URL` para montar os retornos de OAuth (Callback URIs), o que permite o sistema rodar nativamente em domínios oficiais (ex: `https://www.partviajar.com.br`).
+* **Inicialização Inteligente:** As tabelas do banco de dados (como `users`) agora são detectadas e criadas (`create_all()`) automaticamente no momento que a API principal inicializa em um novo servidor.
