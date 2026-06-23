@@ -1,3 +1,0 @@
-partviajar.com.br, www.partviajar.com.br {
-    reverse_proxy api:8000
-}
