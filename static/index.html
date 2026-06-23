@@ -10,6 +10,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/static/styles/index.css">
     <link rel="stylesheet" href="/static/styles/dashboard.css">
+    <link rel="stylesheet" href="/static/styles/premium.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="app" class="app-container">
@@ -86,12 +88,20 @@
 
             <!-- Search Bar Mock -->
             <div class="search-bar-container">
-                <!-- Mock inputs to look like the image -->
-                <div class="search-input"><span class="label">DESTINO</span><input type="text" value="Fortaleza, Brasil" readonly></div>
-                <div class="search-input"><span class="label">CHECK-IN</span><input type="text" value="2026-07-01" readonly></div>
-                <div class="search-input"><span class="label">CHECK-OUT</span><input type="text" value="2026-07-04" readonly></div>
-                <div class="search-input"><span class="label">HÓSPEDES</span><input type="text" value="1" readonly></div>
-                <button class="search-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                <div class="search-input search-container-interactive">
+                    <span class="label">ORIGEM</span>
+                    <input type="text" id="origin-input" value="Fortaleza, Brasil" autocomplete="off">
+                    <div id="origin-autocomplete" class="autocomplete-dropdown"></div>
+                </div>
+                <div class="search-input search-container-interactive">
+                    <span class="label">DESTINO</span>
+                    <input type="text" id="destination-input" value="Lisboa, Portugal" autocomplete="off">
+                    <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
+                </div>
+                <div class="search-input"><span class="label">CHECK-IN</span><input type="date" value="2026-07-01"></div>
+                <div class="search-input"><span class="label">CHECK-OUT</span><input type="date" value="2026-07-04"></div>
+                <div class="search-input"><span class="label">HÓSPEDES</span><input type="number" value="1" min="1"></div>
+                <button class="search-btn" onclick="window.showToast('Buscando voos...', 'success')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
             </div>
 
             <!-- Page Content Container -->
@@ -105,6 +115,9 @@
     <nav class="bottom-nav">
         <!-- Items injected by JS -->
     </nav>
+
+    <!-- Toast Container -->
+    <div id="toast-container"></div>
 
     <script type="module" src="/static/app.js"></script>
 </body>

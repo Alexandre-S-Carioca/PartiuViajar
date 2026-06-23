@@ -13,9 +13,87 @@ function initUI() {
     renderBottomNav();
     setupDropdown();
     setupThemeToggle();
+    setupSearchBar();
     handleRoute();
     
     window.addEventListener('hashchange', handleRoute);
+}
+
+// Global Toast System
+window.showToast = function(message, type = 'success') {
+    const container = document.getElementById('toast-container');
+    const toast = document.createElement('div');
+    toast.className = `toast ${type}`;
+    toast.innerHTML = `
+        <span class="icon">${type === 'success' ? '✅' : '❌'}</span>
+        <span>${message}</span>
+    `;
+    container.appendChild(toast);
+    
+    // Animate in
+    setTimeout(() => toast.classList.add('show'), 10);
+    
+    // Remove after 3s
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 300);
+    }, 3000);
+};
+
+// Search Bar Interactive Autocomplete
+function setupSearchBar() {
+    setupAutocompleteForInput('origin-input', 'origin-autocomplete');
+    setupAutocompleteForInput('destination-input', 'destination-autocomplete');
+}
+
+function setupAutocompleteForInput(inputId, dropdownId) {
+    const input = document.getElementById(inputId);
+    const dropdown = document.getElementById(dropdownId);
+    if (!input || !dropdown) return;
+    
+    let debounceTimer;
+    input.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim();
+        
+        if(query.length >= 2) {
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`/api/v1/flights/airports/cities/search?q=${encodeURIComponent(query)}`);
+                    if(res.ok) {
+                        const data = await res.json();
+                        dropdown.innerHTML = '';
+                        if(data.length > 0) {
+                            data.forEach(item => {
+                                const div = document.createElement('div');
+                                div.className = 'autocomplete-item';
+                                div.innerHTML = `✈️ <strong>${item.iata_code}</strong> - ${item.city}, ${item.country}`;
+                                div.addEventListener('click', () => {
+                                    input.value = `${item.city} (${item.iata_code})`;
+                                    dropdown.classList.remove('show');
+                                });
+                                dropdown.appendChild(div);
+                            });
+                            dropdown.classList.add('show');
+                        } else {
+                            dropdown.classList.remove('show');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Autocomplete fetch error:', err);
+                }
+            }, 300);
+        } else {
+            dropdown.classList.remove('show');
+        }
+    });
+
+    // Hide dropdown on click outside
+    document.addEventListener('click', (e) => {
+        if (e.target !== input && !dropdown.contains(e.target)) {
+            dropdown.classList.remove('show');
+        }
+    });
 }
 
 function renderSidebar() {
