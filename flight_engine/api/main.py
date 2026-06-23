@@ -41,8 +41,14 @@ logger = logging.getLogger(__name__)
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
     logger.info("Starting up application...")
+    
+    # Initialize Database Tables
+    from infrastructure.db import engine, Base
+    import infrastructure.models # Ensure models are imported
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
     # Register Collectors
     # registry.register(LatamCollector())
     # registry.register(GolCollector())
