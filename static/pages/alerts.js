@@ -105,7 +105,7 @@ function renderChart() {
     if(priceChartInstance) priceChartInstance.destroy();
     
     // Mock 30 days data
-    const labels = Array.from({length: 30}, (_, i) => \`Dia \${i+1}\`);
+    const labels = Array.from({length: 30}, (_, i) => `Dia ${i+1}`);
     const data = Array.from({length: 30}, () => Math.floor(Math.random() * (600 - 350 + 1) + 350));
 
     priceChartInstance = new Chart(ctx, {

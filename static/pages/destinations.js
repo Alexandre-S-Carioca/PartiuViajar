@@ -92,7 +92,7 @@ export function renderDestinations() {
             // Add loading
             const loadingMsg = document.createElement('div');
             loadingMsg.className = 'ai-chat-msg';
-            loadingMsg.innerHTML = \`<div class="ai-avatar">IA</div><div class="ai-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>\`;
+            loadingMsg.innerHTML = `<div class="ai-avatar">IA</div><div class="ai-bubble"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
             chatBody.appendChild(loadingMsg);
             
             // Simulate 2.5s network delay
@@ -101,12 +101,12 @@ export function renderDestinations() {
                 
                 const responseMsg = document.createElement('div');
                 responseMsg.className = 'ai-chat-msg';
-                responseMsg.innerHTML = \`<div class="ai-avatar">IA</div><div class="ai-bubble">
-                    <strong>Roteiro Mágico: \${dest} em \${days} dias</strong><br><br>
+                responseMsg.innerHTML = `<div class="ai-avatar">IA</div><div class="ai-bubble">
+                    <strong>Roteiro Mágico: ${dest} em ${days} dias</strong><br><br>
                     <strong>Dia 1:</strong> Chegada e reconhecimento do local. Sugiro um jantar leve perto da praia.<br><br>
                     <strong>Dia 2:</strong> Passeio completo pelos principais pontos turísticos. Não esqueça a câmera!<br><br>
-                    <strong>Dia \${days}:</strong> Compras locais e preparação para o retorno.
-                </div>\`;
+                    <strong>Dia ${days}:</strong> Compras locais e preparação para o retorno.
+                </div>`;
                 chatBody.appendChild(responseMsg);
             }, 2500);
         });
