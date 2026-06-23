@@ -1,0 +1,9 @@
+# Caddyfile para Produção
+# Substitua seu-dominio.com pelo seu domínio real.
+
+{$DOMAIN_NAME:localhost} {
+    # Redireciona tudo para o container da API rodando na porta 8000
+    reverse_proxy api:8000
+    
+    # O Caddy automaticamente gera certificados SSL grátis para o domínio que estiver acima
+}

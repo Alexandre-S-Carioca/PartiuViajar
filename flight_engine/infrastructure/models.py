@@ -92,4 +92,21 @@ class FavoriteModel(Base):
     details = Column(JSON, nullable=False)  # Full details dict of item
     created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
 
+class UserModel(Base):
+    __tablename__ = "users"
 
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    email = Column(String, nullable=False, index=True, unique=True)
+    name = Column(String, nullable=False)
+    google_id = Column(String, nullable=True, index=True)
+    facebook_id = Column(String, nullable=True, index=True)
+    avatar_url = Column(String, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=func.now(), nullable=False)
+
+class AnonymousSearchTrackingModel(Base):
+    __tablename__ = "anonymous_tracking"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    ip_address = Column(String, nullable=False, index=True, unique=True)
+    search_count = Column(Integer, default=0, nullable=False)
+    last_search_at = Column(DateTime(timezone=True), default=func.now(), onupdate=func.now(), nullable=False)

@@ -38,45 +38,45 @@ async def save_flights_async(flights_data: List[dict]):
     
     try:
         async with LocalAsyncSession() as session:
-        for f in flights_data:
-            # Parse dates and decimal prices
-            dep_date = datetime.fromisoformat(f["departure_date"])
-            arr_date = datetime.fromisoformat(f["arrival_date"])
-            coll_date = datetime.fromisoformat(f["collected_at"])
-            price_val = Decimal(f["price"])
-            base_price_val = Decimal(f["base_price_brl"])
+            for f in flights_data:
+                # Parse dates and decimal prices
+                dep_date = datetime.fromisoformat(f["departure_date"])
+                arr_date = datetime.fromisoformat(f["arrival_date"])
+                coll_date = datetime.fromisoformat(f["collected_at"])
+                price_val = Decimal(f["price"])
+                base_price_val = Decimal(f["base_price_brl"])
 
-            # Merge updates the existing record if primary key (id) matches,
-            # otherwise it inserts a new record.
-            flight_model = FlightModel(
-                id=f["id"],
-                airline=f["airline"],
-                origin=f["origin"],
-                destination=f["destination"],
-                departure_date=dep_date,
-                arrival_date=arr_date,
-                price=price_val,
-                currency=f["currency"],
-                base_price_brl=base_price_val,
-                duration=int(f["duration"]),
-                stops=int(f["stops"]),
-                cabin_class=f["cabin_class"],
-                booking_url=f["booking_url"],
-                collected_at=coll_date
-            )
-            await session.merge(flight_model)
-            
-            # Record price history point
-            history = FlightPriceHistoryModel(
-                flight_id=f["id"],
-                price=price_val,
-                currency=f["currency"],
-                recorded_at=coll_date
-            )
-            session.add(history)
-            
-        await session.commit()
-        logger.info(f"Saved {len(flights_data)} flights to DB.")
+                # Merge updates the existing record if primary key (id) matches,
+                # otherwise it inserts a new record.
+                flight_model = FlightModel(
+                    id=f["id"],
+                    airline=f["airline"],
+                    origin=f["origin"],
+                    destination=f["destination"],
+                    departure_date=dep_date,
+                    arrival_date=arr_date,
+                    price=price_val,
+                    currency=f["currency"],
+                    base_price_brl=base_price_val,
+                    duration=int(f["duration"]),
+                    stops=int(f["stops"]),
+                    cabin_class=f["cabin_class"],
+                    booking_url=f["booking_url"],
+                    collected_at=coll_date
+                )
+                await session.merge(flight_model)
+                
+                # Record price history point
+                history = FlightPriceHistoryModel(
+                    flight_id=f["id"],
+                    price=price_val,
+                    currency=f["currency"],
+                    recorded_at=coll_date
+                )
+                session.add(history)
+                
+            await session.commit()
+            logger.info(f"Saved {len(flights_data)} flights to DB.")
     finally:
         await local_engine.dispose()
 

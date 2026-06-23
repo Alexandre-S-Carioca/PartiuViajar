@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     # App Config
     APP_NAME: str = "Flight Search Engine"
     DEBUG: bool = False
+    SITE_URL: str = "http://localhost:8000"
 
     # HTTP Client
     HTTP_MAX_CONNECTIONS: int = 100
@@ -34,6 +35,13 @@ class Settings(BaseSettings):
 
     # Cache
     CACHE_TTL_MINUTES: int = 15
+
+    # Auth & OAuth
+    SECRET_KEY: str = "my_super_secret_key"
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+    FACEBOOK_CLIENT_ID: str = ""
+    FACEBOOK_CLIENT_SECRET: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

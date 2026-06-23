@@ -1,5 +1,6 @@
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, Query, HTTPException, Depends
 from typing import Optional
+from core.security import check_anonymous_search_limit
 import json
 import time
 from loguru import logger
@@ -30,6 +31,7 @@ async def search_hotels(
     types: Optional[str] = Query(None, description="Comma-separated lodging types, e.g., 'hotel,pousada'"),
     bounds: Optional[str] = Query(None, description="JSON string or comma-separated NE_lat,NE_lon,SW_lat,SW_lon"),
     polygon: Optional[str] = Query(None, description="JSON list of coordinates, e.g. '[[lat1,lon1],[lat2,lon2],...]'"),
+    _: bool = Depends(check_anonymous_search_limit)
 ):
     start_time = time.time()
     try:

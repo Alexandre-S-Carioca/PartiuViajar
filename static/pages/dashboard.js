@@ -2,36 +2,25 @@ export function renderDashboard() {
     const container = document.createElement('div');
     container.className = 'dashboard-container';
 
-    container.innerHTML = `
-        <h1 class="page-title">Meu Painel</h1>
-        
-        <!-- Welcome Banner -->
-        <div class="welcome-banner">
-            <div class="user-profile">
-                <img src="https://ui-avatars.com/api/?name=Alexandre&background=0D8ABC&color=fff&size=80" alt="Avatar" class="avatar-huge">
-                <div>
-                    <h2>Olá, Alexandre! 👋</h2>
-                    <p class="subtitle">Bem-vindo de volta ao Partiu Viajar</p>
-                    <span class="badge">Membro desde Junho/2026</span>
-                </div>
-            </div>
-            <div class="level-info">
-                <div class="level-header">
-                    <span class="level-label">NÍVEL ATUAL</span>
-                    <span class="level-title">Explorador ✈️</span>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-texts">
-                        <span>120 pontos</span>
-                        <span class="next-level">Próximo nível: 380 pontos</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 24%"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
+    const token = localStorage.getItem('jwt_token');
+    
+    let userName = "Visitante";
+    let userAvatar = "https://ui-avatars.com/api/?name=Visitante&background=ccc&color=fff&size=80";
+    let memberSince = "Visitante";
+    
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            userName = payload.name.split(' ')[0];
+            userAvatar = payload.avatar || `https://ui-avatars.com/api/?name=${payload.name}&background=0D8ABC&color=fff&size=80`;
+            memberSince = "Membro ativo";
+        } catch(e) {}
+    }
 
+    let premiumContent = '';
+
+    if (token) {
+        premiumContent = `
         <!-- Stats Grid -->
         <div class="stats-grid">
             <div class="stat-card" style="--bg: var(--card-search-bg); --icon-color: var(--card-search-icon)">
@@ -214,6 +203,57 @@ export function renderDashboard() {
                 </div>
             </div>
         </div>
+        `;
+    } else {
+        premiumContent = `
+        <div style="text-align: center; margin-top: 50px; padding: 40px; background: var(--bg-secondary); border-radius: 12px; border: 1px dashed rgba(255,255,255,0.1);">
+            <h2 style="margin-bottom: 15px; color: var(--text-primary);">Desbloqueie todo o potencial do Partiu Viajar!</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 25px; max-width: 600px; margin-left: auto; margin-right: auto;">
+                Como visitante, você pode fazer algumas buscas gratuitas. Ao criar sua conta gratuita, você terá acesso imediato a todas estas funcionalidades avançadas:
+            </p>
+            <div style="display: flex; gap: 20px; justify-content: center; margin-bottom: 30px; flex-wrap: wrap;">
+                <div style="background: var(--bg-main); padding: 15px 20px; border-radius: 8px;"><span class="icon">🔍</span> Buscas Ilimitadas</div>
+                <div style="background: var(--bg-main); padding: 15px 20px; border-radius: 8px;"><span class="icon">❤️</span> Favoritos salvos</div>
+                <div style="background: var(--bg-main); padding: 15px 20px; border-radius: 8px;"><span class="icon">🔔</span> Alertas de preço</div>
+                <div style="background: var(--bg-main); padding: 15px 20px; border-radius: 8px;"><span class="icon">🕒</span> Histórico de buscas</div>
+            </div>
+            <button onclick="window.showAuthModal()" class="btn-magic" style="padding: 12px 30px; font-size: 1.1rem; border-radius: 25px; cursor: pointer;">Fazer Login / Cadastrar agora</button>
+        </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <h1 class="page-title">Meu Painel</h1>
+        
+        <!-- Welcome Banner -->
+        <div class="welcome-banner">
+            <div class="user-profile">
+                <img src="${userAvatar}" alt="Avatar" class="avatar-huge">
+                <div>
+                    <h2>Olá, ${userName}! 👋</h2>
+                    <p class="subtitle">Bem-vindo(a) ao Partiu Viajar</p>
+                    <span class="badge">${memberSince}</span>
+                </div>
+            </div>
+            ${token ? `
+            <div class="level-info">
+                <div class="level-header">
+                    <span class="level-label">NÍVEL ATUAL</span>
+                    <span class="level-title">Explorador ✈️</span>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-texts">
+                        <span>120 pontos</span>
+                        <span class="next-level">Próximo nível: 380 pontos</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 24%"></div>
+                    </div>
+                </div>
+            </div>` : ''}
+        </div>
+
+        ${premiumContent}
     `;
 
     return container;

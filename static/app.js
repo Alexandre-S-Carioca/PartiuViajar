@@ -16,11 +16,20 @@ const menuItems = [
 
 // Initialize UI
 function initUI() {
+    // Auth Setup deve ocorrer ANTES de renderizar as rotas e menus
+    setupAuth();
+
     renderSidebar();
     renderBottomNav();
     setupDropdown();
     setupThemeToggle();
     setupSearchBar();
+    
+    // Remove o fragmento #_=_ que o Facebook injeta no redirecionamento
+    if (window.location.hash === '#_=_') {
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     handleRoute();
     
     // Setup tab buttons
@@ -32,7 +41,83 @@ function initUI() {
     });
 
     window.addEventListener('hashchange', handleRoute);
+    
+    window.addEventListener('hashchange', handleRoute);
 }
+
+function setupAuth() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const token = urlParams.get('token');
+    if (token) {
+        localStorage.setItem('jwt_token', token);
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    updateAuthUI();
+}
+
+function updateAuthUI() {
+    const token = localStorage.getItem('jwt_token');
+    const topbarAvatar = document.getElementById('topbar-avatar');
+    const topbarName = document.getElementById('topbar-name');
+    const dropAvatar = document.getElementById('dropdown-avatar');
+    const dropName = document.getElementById('dropdown-name');
+    const dropEmail = document.getElementById('dropdown-email');
+    const loginBtn = document.getElementById('menu-login-btn');
+    const loginDiv = document.getElementById('menu-login-divider');
+    const logoutBtn = document.getElementById('menu-logout-btn');
+
+    if (token) {
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1]));
+            const avatarUrl = payload.avatar || `https://ui-avatars.com/api/?name=${payload.name}&background=0D8ABC&color=fff`;
+            
+            topbarAvatar.src = avatarUrl;
+            topbarName.innerHTML = `Olá, ${payload.name.split(' ')[0]} <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+            dropAvatar.src = avatarUrl;
+            dropName.innerText = payload.name;
+            dropEmail.innerText = payload.email;
+            
+            loginBtn.style.display = 'none';
+            loginDiv.style.display = 'none';
+            logoutBtn.style.display = 'block';
+            document.querySelectorAll('.auth-required').forEach(el => el.style.display = '');
+        } catch(e) {
+            console.error("Invalid token", e);
+            localStorage.removeItem('jwt_token');
+        }
+    } else {
+        topbarAvatar.src = "https://ui-avatars.com/api/?name=Visitante&background=ccc&color=fff";
+        topbarName.innerHTML = `Visitante <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>`;
+        dropAvatar.src = "https://ui-avatars.com/api/?name=Visitante&background=ccc&color=fff";
+        dropName.innerText = "Visitante";
+        dropEmail.innerText = "Faça login para salvar buscas";
+        
+        loginBtn.style.display = 'block';
+        loginDiv.style.display = 'block';
+        logoutBtn.style.display = 'none';
+        document.querySelectorAll('.auth-required').forEach(el => el.style.display = 'none');
+    }
+
+    // Atualiza menu lateral e inferior baseado no status
+    renderSidebar();
+    renderBottomNav();
+}
+
+window.showAuthModal = function() {
+    document.getElementById('user-dropdown').classList.remove('show');
+    document.getElementById('auth-modal').classList.add('show');
+};
+
+window.logout = function() {
+    localStorage.removeItem('jwt_token');
+    updateAuthUI();
+    window.showToast('Você saiu da sua conta.', 'success');
+    // Força a atualização da página para limpar o painel e dados residuais
+    setTimeout(() => {
+        window.location.reload();
+    }, 800);
+};
+
 
 window.currentSearchMode = 'flights';
 
@@ -114,7 +199,15 @@ window.performSearch = async function() {
 
         try {
             let url = `/api/hotels?destination=${destCode}&checkin=${checkin}&checkout=${checkout}&adults=${adults}`;
-            const res = await fetch(url);
+            const token = localStorage.getItem('jwt_token');
+            const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+            
+            const res = await fetch(url, { headers });
+            
+            if(res.status === 403) {
+                window.showAuthModal();
+                throw new Error('Limite gratuito excedido');
+            }
             if(!res.ok) throw new Error('Erro na busca');
             const data = await res.json();
 
@@ -179,7 +272,14 @@ window.performSearch = async function() {
         let url = `/api/travel?origin=${originCode}&destination=${destCode}&departure_date=${checkin}&adults=${adults}`;
         if(checkout) url += `&return_date=${checkout}`;
 
-        const res = await fetch(url);
+        const token = localStorage.getItem('jwt_token');
+        const headers = token ? { "Authorization": `Bearer ${token}` } : {};
+            
+        const res = await fetch(url, { headers });
+        if(res.status === 403) {
+            window.showAuthModal();
+            throw new Error('Limite gratuito excedido');
+        }
         if(!res.ok) throw new Error('Erro na busca');
         const data = await res.json();
 
@@ -330,7 +430,12 @@ function setupAutocompleteForInput(inputId, dropdownId) {
 
 function renderSidebar() {
     const menuEl = document.getElementById('sidebar-menu');
-    menuEl.innerHTML = menuItems.map(item => `
+    if (!menuEl) return;
+    const token = localStorage.getItem('jwt_token');
+    const authOnlyIds = ['favorites', 'alerts', 'history', 'destinations'];
+    const items = menuItems.filter(item => token || !authOnlyIds.includes(item.id));
+    
+    menuEl.innerHTML = items.map(item => `
         <li>
             <a href="${item.path}" class="nav-item ${location.hash === item.path || (!location.hash && item.id === 'dashboard') ? 'active' : ''}" data-id="${item.id}">
                 <span class="icon">${item.icon}</span> ${item.label}
@@ -341,7 +446,10 @@ function renderSidebar() {
 
 function renderBottomNav() {
     const navEl = document.querySelector('.bottom-nav');
-    const mobileItems = menuItems.filter(i => ['dashboard', 'favorites', 'alerts', 'history', 'preferences'].includes(i.id));
+    if (!navEl) return;
+    const token = localStorage.getItem('jwt_token');
+    const authOnlyIds = ['favorites', 'alerts', 'history', 'destinations'];
+    const mobileItems = menuItems.filter(i => ['dashboard', 'favorites', 'alerts', 'history', 'preferences'].includes(i.id) && (token || !authOnlyIds.includes(i.id)));
     navEl.innerHTML = mobileItems.map(item => `
         <a href="${item.path}" class="nav-item ${location.hash === item.path || (!location.hash && item.id === 'dashboard') ? 'active' : ''}" style="flex-direction: column; gap: 4px; padding: 8px;">
             <span class="icon">${item.icon}</span>

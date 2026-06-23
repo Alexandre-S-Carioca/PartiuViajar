@@ -1,5 +1,6 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import Optional
+from core.security import check_anonymous_search_limit
 import asyncio
 import time
 from datetime import datetime
@@ -46,7 +47,8 @@ async def save_search_history(
 
 @router.get("")
 async def unified_search(
-    origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, adults: int = 1
+    origin: str, destination: str, departure_date: str, return_date: Optional[str] = None, adults: int = 1,
+    _: bool = Depends(check_anonymous_search_limit)
 ):
     start_time = time.time()
     # Log search in history asynchronously
