@@ -137,37 +137,64 @@ function setupAutocompleteForInput(inputId, dropdownId) {
     if (!input || !dropdown) return;
     
     let debounceTimer;
+
+    const performAutocomplete = async (query) => {
+        try {
+            // Se estiver vazio, exibe alguns populares como default
+            let url = `/api/v1/flights/airports/cities/search?q=${encodeURIComponent(query)}`;
+            if(query.length === 0) {
+                // Mock de populares se vazio
+                dropdown.innerHTML = `
+                    <div class="autocomplete-item" data-val="São Paulo (GRU)">✈️ <strong>GRU</strong> - São Paulo, Brasil</div>
+                    <div class="autocomplete-item" data-val="Rio de Janeiro (GIG)">✈️ <strong>GIG</strong> - Rio de Janeiro, Brasil</div>
+                    <div class="autocomplete-item" data-val="Lisboa (LIS)">✈️ <strong>LIS</strong> - Lisboa, Portugal</div>
+                    <div class="autocomplete-item" data-val="Miami (MIA)">✈️ <strong>MIA</strong> - Miami, Estados Unidos</div>
+                `;
+                dropdown.querySelectorAll('.autocomplete-item').forEach(el => {
+                    el.addEventListener('click', () => {
+                        input.value = el.getAttribute('data-val');
+                        dropdown.classList.remove('show');
+                    });
+                });
+                dropdown.classList.add('show');
+                return;
+            }
+
+            const res = await fetch(url);
+            if(res.ok) {
+                const data = await res.json();
+                dropdown.innerHTML = '';
+                if(data.length > 0) {
+                    data.forEach(item => {
+                        const div = document.createElement('div');
+                        div.className = 'autocomplete-item';
+                        div.innerHTML = `✈️ <strong>${item.iata_code}</strong> - ${item.city}, ${item.country}`;
+                        div.addEventListener('click', () => {
+                            input.value = `${item.city} (${item.iata_code})`;
+                            dropdown.classList.remove('show');
+                        });
+                        dropdown.appendChild(div);
+                    });
+                    dropdown.classList.add('show');
+                } else {
+                    dropdown.classList.remove('show');
+                }
+            }
+        } catch (err) {
+            console.error('Autocomplete fetch error:', err);
+        }
+    };
+
+    input.addEventListener('focus', () => {
+        performAutocomplete(input.value.trim());
+    });
+
     input.addEventListener('input', (e) => {
         clearTimeout(debounceTimer);
         const query = e.target.value.trim();
         
-        if(query.length >= 2) {
-            debounceTimer = setTimeout(async () => {
-                try {
-                    const res = await fetch(`/api/v1/flights/airports/cities/search?q=${encodeURIComponent(query)}`);
-                    if(res.ok) {
-                        const data = await res.json();
-                        dropdown.innerHTML = '';
-                        if(data.length > 0) {
-                            data.forEach(item => {
-                                const div = document.createElement('div');
-                                div.className = 'autocomplete-item';
-                                div.innerHTML = `✈️ <strong>${item.iata_code}</strong> - ${item.city}, ${item.country}`;
-                                div.addEventListener('click', () => {
-                                    input.value = `${item.city} (${item.iata_code})`;
-                                    dropdown.classList.remove('show');
-                                });
-                                dropdown.appendChild(div);
-                            });
-                            dropdown.classList.add('show');
-                        } else {
-                            dropdown.classList.remove('show');
-                        }
-                    }
-                } catch (err) {
-                    console.error('Autocomplete fetch error:', err);
-                }
-            }, 300);
+        if(query.length >= 2 || query.length === 0) {
+            debounceTimer = setTimeout(() => performAutocomplete(query), 300);
         } else {
             dropdown.classList.remove('show');
         }
