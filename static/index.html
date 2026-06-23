@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Área do Usuário - Partiu Viajar</title>
+    <meta name="description" content="Área do usuário do metabuscador Partiu Viajar. Gerencie seus alertas, favoritos e histórico de buscas.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/styles/index.css">
+    <link rel="stylesheet" href="/styles/dashboard.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-logo">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M2 12L22 2L15 22L11 13L2 12Z" fill="#3B82F6"/>
+                </svg>
+                <span>Partiu<br><strong>Viajar</strong></span>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-group-title">MENU DO USUÁRIO</div>
+                <ul id="sidebar-menu">
+                    <!-- Nav items will be injected here -->
+                </ul>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="theme-toggle">
+                    <span class="icon">🌙</span> Tema escuro
+                    <label class="switch">
+                        <input type="checkbox" id="theme-switch">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <a href="#" class="nav-item"><span class="icon">❓</span> Ajuda</a>
+                <a href="#" class="nav-item logout"><span class="icon">🚪</span> Sair</a>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Top Navbar -->
+            <header class="topbar">
+                <div class="topbar-tabs">
+                    <button class="tab-btn active"><span class="icon">✈️</span> Passagens</button>
+                    <button class="tab-btn"><span class="icon">🏨</span> Hotéis</button>
+                </div>
+                
+                <div class="topbar-actions">
+                    <button class="icon-btn">🌙</button>
+                    <div class="user-dropdown-trigger" id="user-menu-btn">
+                        <img src="https://ui-avatars.com/api/?name=Alexandre&background=0D8ABC&color=fff" alt="Alexandre" class="avatar">
+                        <span class="user-name">Olá, Alexandre <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
+                    </div>
+
+                    <!-- Dropdown Menu -->
+                    <div class="dropdown-menu" id="user-dropdown">
+                        <div class="dropdown-header">
+                            <img src="https://ui-avatars.com/api/?name=Alexandre&background=0D8ABC&color=fff" alt="Alexandre" class="avatar-large">
+                            <div class="user-info">
+                                <span class="name">Alexandre</span>
+                                <span class="email">alexandre@email.com</span>
+                            </div>
+                        </div>
+                        <ul class="dropdown-list">
+                            <li><a href="#/dashboard"><span class="icon">🏠</span> Meu Painel</a></li>
+                            <li><a href="#/favorites"><span class="icon">❤️</span> Favoritos</a></li>
+                            <li><a href="#/alerts"><span class="icon">🔔</span> Alertas de preço</a></li>
+                            <li><a href="#/history"><span class="icon">🕒</span> Histórico de buscas</a></li>
+                            <li><a href="#/destinations"><span class="icon">📍</span> Destinos salvos</a></li>
+                            <li><a href="#/preferences"><span class="icon">⚙️</span> Preferências</a></li>
+                            <li class="divider"></li>
+                            <li><div class="theme-toggle-inline"><span class="icon">🌙</span> Tema escuro <label class="switch"><input type="checkbox"><span class="slider round"></span></label></div></li>
+                            <li><a href="#/help"><span class="icon">❓</span> Ajuda</a></li>
+                            <li class="divider"></li>
+                            <li><a href="#/logout" class="logout"><span class="icon">🚪</span> Sair</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Search Bar Mock -->
+            <div class="search-bar-container">
+                <!-- Mock inputs to look like the image -->
+                <div class="search-input"><span class="label">DESTINO</span><input type="text" value="Fortaleza, Brasil" readonly></div>
+                <div class="search-input"><span class="label">CHECK-IN</span><input type="text" value="2026-07-01" readonly></div>
+                <div class="search-input"><span class="label">CHECK-OUT</span><input type="text" value="2026-07-04" readonly></div>
+                <div class="search-input"><span class="label">HÓSPEDES</span><input type="text" value="1" readonly></div>
+                <button class="search-btn"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+            </div>
+
+            <!-- Page Content Container -->
+            <div id="page-content">
+                <!-- Dynamic content will be loaded here -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Bottom Navigation for Mobile -->
+    <nav class="bottom-nav">
+        <!-- Items injected by JS -->
+    </nav>
+
+    <script type="module" src="/app.js"></script>
+</body>
+</html>
