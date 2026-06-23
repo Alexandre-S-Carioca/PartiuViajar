@@ -168,9 +168,9 @@ function setupAutocompleteForInput(inputId, dropdownId) {
                     data.forEach(item => {
                         const div = document.createElement('div');
                         div.className = 'autocomplete-item';
-                        div.innerHTML = `✈️ <strong>${item.iata_code}</strong> - ${item.city}, ${item.country}`;
+                        div.innerHTML = `✈️ <strong>${item.code}</strong> - ${item.city}, ${item.country}`;
                         div.addEventListener('click', () => {
-                            input.value = `${item.city} (${item.iata_code})`;
+                            input.value = `${item.city} (${item.code})`;
                             dropdown.classList.remove('show');
                         });
                         dropdown.appendChild(div);
