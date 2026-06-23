@@ -40,6 +40,84 @@ window.showToast = function(message, type = 'success') {
     }, 3000);
 };
 
+// Perform Actual Search
+window.performSearch = async function() {
+    const originRaw = document.getElementById('origin-input').value;
+    const destRaw = document.getElementById('destination-input').value;
+    const checkin = document.getElementById('checkin-input').value;
+    const checkout = document.getElementById('checkout-input').value;
+    const adults = document.getElementById('adults-input').value || 1;
+
+    // Extract IATA codes. Assuming format "City (IATA)"
+    const extractIata = (str) => {
+        const match = str.match(/\(([A-Z]{3})\)/);
+        return match ? match[1] : str.substring(0,3).toUpperCase();
+    };
+
+    const originCode = extractIata(originRaw);
+    const destCode = extractIata(destRaw);
+
+    if(!originCode || !destCode || !checkin) {
+        window.showToast('Por favor, preencha origem, destino e data de ida.', 'error');
+        return;
+    }
+
+    const overlay = document.getElementById('search-results-overlay');
+    const body = document.getElementById('search-results-body');
+    overlay.classList.add('show');
+    
+    body.innerHTML = `
+        <div style="text-align: center; padding: 40px;">
+            <div class="typing-indicator" style="margin-bottom: 20px;"><span></span><span></span><span></span></div>
+            <h4>Buscando as melhores opções em várias companhias...</h4>
+            <p style="color: var(--text-secondary)">Isso pode levar alguns segundos, o Partiu Viajar está vasculhando a internet.</p>
+        </div>
+    `;
+
+    try {
+        let url = `/api/travel?origin=${originCode}&destination=${destCode}&departure_date=${checkin}&adults=${adults}`;
+        if(checkout) url += `&return_date=${checkout}`;
+
+        const res = await fetch(url);
+        if(!res.ok) throw new Error('Erro na busca');
+        const data = await res.json();
+
+        let flightsHtml = '';
+        if(data.flights && data.flights.outbound && data.flights.outbound.length > 0) {
+            flightsHtml = data.flights.outbound.map(f => `
+                <div style="background: var(--bg-main); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <strong style="color: var(--primary)">${f.airline}</strong><br>
+                        <span>${new Date(f.departure_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(f.arrival_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        <div style="font-size: 0.8rem; color: var(--text-secondary)">${f.origin} → ${f.destination} (${f.duration})</div>
+                    </div>
+                    <div style="text-align: right;">
+                        <strong style="font-size: 1.2rem; color: var(--success)">R$ ${f.price}</strong><br>
+                        <a href="${f.booking_url}" target="_blank" class="btn-magic" style="padding: 8px 16px; font-size: 0.9rem; margin-top: 8px; display: inline-block; text-decoration: none;">Comprar</a>
+                    </div>
+                </div>
+            `).join('');
+        } else {
+            flightsHtml = '<p>Nenhum voo encontrado para esta rota.</p>';
+        }
+
+        body.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <h4 style="margin-bottom: 10px;">Voos de Ida encontrados</h4>
+                ${flightsHtml}
+            </div>
+        `;
+
+    } catch(err) {
+        body.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--danger);">
+                <h4>Ops! Ocorreu um erro ao buscar passagens.</h4>
+                <p>Verifique se o backend (flight_engine) está rodando e se há internet.</p>
+            </div>
+        `;
+    }
+};
+
 // Search Bar Interactive Autocomplete
 function setupSearchBar() {
     setupAutocompleteForInput('origin-input', 'origin-autocomplete');

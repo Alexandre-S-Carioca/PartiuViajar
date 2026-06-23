@@ -98,10 +98,25 @@
                     <input type="text" id="destination-input" value="Lisboa, Portugal" autocomplete="off">
                     <div id="destination-autocomplete" class="autocomplete-dropdown"></div>
                 </div>
-                <div class="search-input"><span class="label">CHECK-IN</span><input type="date" value="2026-07-01"></div>
-                <div class="search-input"><span class="label">CHECK-OUT</span><input type="date" value="2026-07-04"></div>
-                <div class="search-input"><span class="label">HÓSPEDES</span><input type="number" value="1" min="1"></div>
-                <button class="search-btn" onclick="window.showToast('Buscando voos...', 'success')"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></button>
+                <div class="search-input"><span class="label">CHECK-IN</span><input type="date" id="checkin-input" value="2026-07-01"></div>
+                <div class="search-input"><span class="label">CHECK-OUT</span><input type="date" id="checkout-input" value="2026-07-04"></div>
+                <div class="search-input"><span class="label">HÓSPEDES</span><input type="number" id="adults-input" value="1" min="1"></div>
+                <button class="search-btn" id="main-search-btn" onclick="window.performSearch()">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                </button>
+            </div>
+
+            <!-- Search Results Overlay -->
+            <div class="modal-overlay" id="search-results-overlay">
+                <div class="modal-content" style="max-width: 900px; height: 80vh; display: flex; flex-direction: column;">
+                    <div class="modal-header">
+                        <h3>Resultados da Busca</h3>
+                        <button class="modal-close" onclick="document.getElementById('search-results-overlay').classList.remove('show')">×</button>
+                    </div>
+                    <div id="search-results-body" style="flex: 1; overflow-y: auto;">
+                        <!-- Results injected here -->
+                    </div>
+                </div>
             </div>
 
             <!-- Page Content Container -->
