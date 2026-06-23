@@ -1,3 +1,10 @@
+import { renderDashboard } from './pages/dashboard.js';
+import { renderFavorites } from './pages/favorites.js';
+import { renderAlerts } from './pages/alerts.js';
+import { renderHistory } from './pages/history.js';
+import { renderDestinations } from './pages/destinations.js';
+import { renderPreferences } from './pages/preferences.js';
+
 const menuItems = [
     { id: 'dashboard', icon: '🏠', label: 'Meu Painel', path: '#/dashboard' },
     { id: 'favorites', icon: '❤️', label: 'Favoritos', path: '#/favorites' },
@@ -230,12 +237,6 @@ function setupThemeToggle() {
 }
 
 // Simple Router
-import { renderDashboard } from './pages/dashboard.js';
-import { renderFavorites } from './pages/favorites.js';
-import { renderAlerts } from './pages/alerts.js';
-import { renderHistory } from './pages/history.js';
-import { renderDestinations } from './pages/destinations.js';
-import { renderPreferences } from './pages/preferences.js';
 
 const routes = {
     '#/dashboard': renderDashboard,
