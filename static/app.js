@@ -188,6 +188,34 @@ window.showToast = function(message, type = 'success') {
     }, 3000);
 };
 
+// Save Search to History
+window.saveSearchHistory = function(mode, origin, dest, checkin) {
+    try {
+        let history = JSON.parse(localStorage.getItem('partiuviajar_history') || '[]');
+        
+        let destName = dest ? dest.split('(')[0].trim() : 'Desconhecido';
+        let originName = origin ? origin.split('(')[0].trim() : '';
+        
+        let text = mode === 'hotels' ? `Hotéis em ${destName}` : `${originName} → ${destName}`;
+        
+        let parts = checkin.split('-');
+        let dateStr = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : checkin;
+
+        const entry = { mode, text, date: dateStr, ts: Date.now() };
+        
+        if(history.length > 0 && history[0].text === entry.text && history[0].date === entry.date) {
+            return;
+        }
+
+        history.unshift(entry);
+        if(history.length > 5) history.pop();
+        
+        localStorage.setItem('partiuviajar_history', JSON.stringify(history));
+    } catch(e) {
+        console.error("Erro ao salvar histórico", e);
+    }
+};
+
 // Perform Actual Search
 window.performSearch = async function() {
     const originRaw = document.getElementById('origin-input').value;
@@ -210,6 +238,8 @@ window.performSearch = async function() {
             window.showToast('Por favor, preencha destino, data de check-in e check-out.', 'error');
             return;
         }
+
+        window.saveSearchHistory('hotels', originRaw, destRaw, checkin);
 
         const overlay = document.getElementById('search-results-overlay');
         const body = document.getElementById('search-results-body');
@@ -281,6 +311,8 @@ window.performSearch = async function() {
         window.showToast('Por favor, preencha origem, destino e data de ida.', 'error');
         return;
     }
+
+    window.saveSearchHistory('flights', originRaw, destRaw, checkin);
 
     const overlay = document.getElementById('search-results-overlay');
     const body = document.getElementById('search-results-body');
