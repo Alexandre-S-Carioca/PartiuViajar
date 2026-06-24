@@ -261,15 +261,24 @@ a { text-decoration: none; color: inherit; }
     height: 48px;
     border-radius: 50%;
 }
+.user-info {
+    overflow: hidden;
+}
 .user-info .name {
     display: block;
     font-weight: 600;
     font-size: 1rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 .user-info .email {
     display: block;
     font-size: 0.8rem;
     color: var(--text-secondary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dropdown-list {
