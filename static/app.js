@@ -126,18 +126,44 @@ document.addEventListener('DOMContentLoaded', () => {
     const tabFlights = document.getElementById('tab-flights');
     const tabHotels = document.getElementById('tab-hotels');
     const originContainer = document.getElementById('origin-container');
+    const tripTypeSelector = document.getElementById('flight-trip-type');
+    
+    const labelCheckin = document.getElementById('label-checkin');
+    const labelCheckout = document.getElementById('label-checkout');
+    const labelGuests = document.getElementById('label-guests');
 
     if(tabFlights) {
         tabFlights.addEventListener('click', () => {
             window.currentSearchMode = 'flights';
             originContainer.style.display = 'block';
+            if(tripTypeSelector) tripTypeSelector.style.display = 'block';
+            if(labelCheckin) labelCheckin.innerText = 'IDA';
+            if(labelCheckout) labelCheckout.innerText = 'VOLTA';
+            if(labelGuests) labelGuests.innerText = 'PASSAGEIROS';
         });
     }
     if(tabHotels) {
         tabHotels.addEventListener('click', () => {
             window.currentSearchMode = 'hotels';
             originContainer.style.display = 'none';
+            if(tripTypeSelector) tripTypeSelector.style.display = 'none';
+            if(labelCheckin) labelCheckin.innerText = 'CHECK-IN';
+            if(labelCheckout) labelCheckout.innerText = 'CHECK-OUT';
+            if(labelGuests) labelGuests.innerText = 'HÓSPEDES';
         });
+    }
+
+    const tripRadios = document.querySelectorAll('input[name="trip_type"]');
+    if(tripRadios.length > 0) {
+        tripRadios.forEach(r => r.addEventListener('change', (e) => {
+            const checkoutWrapper = document.getElementById('checkout-wrapper');
+            if(e.target.value === 'oneway') {
+                if(checkoutWrapper) checkoutWrapper.style.display = 'none';
+                document.getElementById('checkout-input').value = '';
+            } else {
+                if(checkoutWrapper) checkoutWrapper.style.display = 'flex';
+            }
+        }));
     }
 });
 
