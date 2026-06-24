@@ -431,6 +431,27 @@ document.addEventListener("DOMContentLoaded", () => {
             checkoutDate = nextDay.toISOString().split('T')[0];
         }
 
+        // Save search history
+        try {
+            let history = JSON.parse(localStorage.getItem('partiuviajar_history') || '[]');
+            let rawOrigin = document.getElementById("origin").value;
+            let rawDest = document.getElementById("destination").value;
+            let originName = rawOrigin ? rawOrigin.split('(')[0].trim() : '';
+            let destName = rawDest ? rawDest.split('(')[0].trim() : 'Desconhecido';
+            
+            let text = searchMode === 'hotel-only' ? `Hotéis em ${destName}` : `${originName} → ${destName}`;
+            let parts = dateVal.split('-');
+            let dateStr = parts.length === 3 ? `${parts[2]}/${parts[1]}/${parts[0]}` : dateVal;
+
+            const entry = { mode: searchMode === 'hotel-only' ? 'hotels' : 'flights', text, date: dateStr, ts: Date.now() };
+            
+            if(!(history.length > 0 && history[0].text === entry.text && history[0].date === entry.date)) {
+                history.unshift(entry);
+                if(history.length > 5) history.pop();
+                localStorage.setItem('partiuviajar_history', JSON.stringify(history));
+            }
+        } catch(err) { console.error("Error saving history:", err); }
+
         // Reset Selection state
         selectedOutboundFlight = null;
         selectedInboundFlight = null;

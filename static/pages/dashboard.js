@@ -19,6 +19,12 @@ export function renderDashboard() {
 
     let premiumContent = '';
 
+    let history = [];
+    try {
+        history = JSON.parse(localStorage.getItem('partiuviajar_history') || '[]');
+    } catch(e) {}
+    let historyCount = history.length;
+
     if (token) {
         premiumContent = `
         <!-- Stats Grid -->
@@ -26,7 +32,7 @@ export function renderDashboard() {
             <div class="stat-card" style="--bg: var(--card-search-bg); --icon-color: var(--card-search-icon)">
                 <div class="icon-box">🔍</div>
                 <div class="stat-info">
-                    <h3>0</h3>
+                    <h3>${historyCount}</h3>
                     <p>Pesquisas realizadas</p>
                 </div>
             </div>
@@ -73,10 +79,21 @@ export function renderDashboard() {
                     <h3>Últimas buscas</h3>
                     <a href="#/history" class="link-btn">Ver histórico</a>
                 </div>
+                ${historyCount === 0 ? `
                 <div class="panel-content list-content" style="display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 40px 20px; color: var(--text-secondary);">
                     <div style="font-size: 2rem; margin-bottom: 10px;">🕒</div>
                     <p>O seu histórico de buscas está vazio. Que tal começar a explorar?</p>
                 </div>
+                ` : `
+                <div class="panel-content list-content">
+                    ${history.map(item => `
+                        <div class="history-item">
+                            <span class="icon">🕒</span> <span class="text">${item.text}</span> <span class="date">${item.date}</span>
+                        </div>
+                    `).join('')}
+                    <button class="btn-outline full-width mt-10">Buscar novamente</button>
+                </div>
+                `}
             </div>
 
             <!-- Saved Destinations -->

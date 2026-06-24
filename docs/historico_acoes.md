@@ -35,13 +35,25 @@ Este documento mantém o registro das últimas manutenções, correções de bug
 - **Causa:** No painel de desenvolvedores do Facebook, a URL de callback (`https://www.partviajar.com.br/api/v1/auth/facebook/callback`) estava sendo inserida na seção incorreta (Compartilhamentos) em vez das configurações exclusivas do produto "Login do Facebook". Além disso, estava faltando a URL da Política de Privacidade para habilitar o salvamento.
 - **Ação:** Instruções detalhadas para navegar no novo layout do *Facebook Developers* (Casos de uso -> Autenticação e criação da conta -> Configurações -> URIs de redirecionamento do OAuth válidos), onde a URL com `https://` foi corretamente inserida e salva, liberando o login.
 
-### 6. Ajuste de Layout no Menu do Usuário (CSS)
-- **Problema:** Nomes de e-mails muito longos (ex: `alexandresantoscarioca1@gmail.com`) estavam estourando a largura do menu suspenso do usuário no painel (`dashboard.html`), quebrando o layout.
-- **Ação:** Inserimos as regras de formatação de texto (`overflow: hidden`, `text-overflow: ellipsis`, `white-space: nowrap`) na classe `.user-info` e em seus elementos filhos (`.name` e `.email`) dentro do arquivo `static/styles/index.css`. Com isso, textos excessivamente grandes ganham reticências automaticamente em vez de desconfigurar o design.
+### 7. Refatoração Responsiva dos Cartões de Resultado
+- **Problema:** Em dispositivos móveis, a listagem de voos e hotéis estava esmagando o texto na horizontal, devido a um `display: flex` engessado.
+- **Ação:** As regras inline foram substituídas pelas classes CSS `.result-card`, `.info-section` e `.price-section`. Foi criada uma regra de `@media (max-width: 600px)` no `index.css` que converte a visualização para colunas e expande a foto do hotel como um banner, garantindo fluidez no celular. O parâmetro de versão do CSS e JS no `index.html` foi atualizado (Cache Busting) para forçar o recarregamento.
+
+### 8. Busca Inteligente no Painel de Usuário
+- **Problema:** A barra de buscas dentro do painel (`dashboard.html`) exibia sempre "CHECK-IN", "CHECK-OUT" e "HÓSPEDES", independentemente da aba selecionada. Além disso, não possuía filtro de "Só Ida".
+- **Ação:** Inserimos seletores dinâmicos (Radio Buttons) para "Ida e Volta / Só Ida" na interface. No arquivo `app.js`, injetamos ouvintes de evento para que, ao clicar na aba "Passagens", os rótulos mudem para "IDA/VOLTA/PASSAGEIROS" e para que o campo de volta seja escondido quando a opção "Só Ida" é ativada.
+
+### 9. Calibragem de Contraste no Tema Claro
+- **Problema:** O modo claro do painel não oferecia separação visual suficiente entre os cartões brancos e o fundo cinza clarinho (`#F3F4F6`), apagando as sombras.
+- **Ação:** Alteramos as variáveis do modo claro (`[data-theme="light"]`). O fundo principal foi escurecido para `#E5E7EB`, a cor das bordas dos cartões de dashboard mudou para `#D1D5DB` e as opacidades de `--shadow-sm`, `--shadow-md` e `--shadow-lg` foram triplicadas.
+
+### 10. Limpeza de Dados Fictícios e Interação de Recomendações
+- **Problema:** O painel (Dashboard) estava pré-preenchido com números falsos e listas fictícias (buscas, alertas, destinos), o que causava estranheza em novos usuários cadastrados. Além disso, as recomendações no rodapé eram estáticas e não levavam a lugar algum.
+- **Ação:** No arquivo `dashboard.js`, zeramos os números estatísticos do placar principal (Pesquisas, Favoritos, Alertas, Destinos). Para as colunas de "Últimas buscas", "Alertas" e "Destinos salvos", implementamos mensagens e ícones amigáveis de estado vazio (*empty states*). Também transformamos as quatro fotos de recomendação no rodapé em links embutidos (`<a>`) que redirecionam os usuários para o Google Travel (com o termo de busca pré-preenchido para aquele destino), proporcionando interatividade imediata.
 
 ---
 
 ## 🎯 Onde Paramos / Próximos Passos
-- A infraestrutura de autenticação via Google e Facebook está totalmente funcional, autorizada e parametrizada em produção.
-- O layout do menu do usuário está refinado e seguro contra quebras por conta de nomes extensos.
+- A infraestrutura de autenticação está totalmente operante.
+- O Layout responsivo do painel e os temas claro/escuro estão sólidos e limpos, apresentando dados consistentes (zerados) para novas contas.
 - As próximas atividades devem focar em finalizar a implementação do mapa iterativo no frontend e backend (baseado no `accommodation_service` e no arquivo `map.py` que estava sendo editado).
