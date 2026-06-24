@@ -57,7 +57,7 @@
     width: 300px;
     border: 1px solid rgba(255,255,255,0.05);
 }
-[data-theme="light"] .level-info { border-color: #E5E7EB; }
+[data-theme="light"] .level-info { border-color: #D1D5DB; }
 
 .level-header {
     display: flex;
@@ -105,7 +105,7 @@
     transition: transform 0.2s;
 }
 .stat-card:hover { transform: translateY(-3px); }
-[data-theme="light"] .stat-card { border-color: #E5E7EB; }
+[data-theme="light"] .stat-card { border-color: #D1D5DB; }
 
 .icon-box {
     width: 48px;
@@ -135,7 +135,7 @@
     box-shadow: var(--shadow-sm);
     border: 1px solid rgba(255,255,255,0.02);
 }
-[data-theme="light"] .dashboard-panel { border-color: #E5E7EB; }
+[data-theme="light"] .dashboard-panel { border-color: #D1D5DB; }
 
 .panel-header {
     display: flex;
@@ -182,7 +182,7 @@
     padding: 8px 0;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
-[data-theme="light"] .history-item, [data-theme="light"] .dest-item { border-color: #E5E7EB; }
+[data-theme="light"] .history-item, [data-theme="light"] .dest-item { border-color: #D1D5DB; }
 .history-item:last-child, .dest-item:last-child { border-bottom: none; }
 .history-item .text { flex: 1; font-size: 0.9rem; }
 .history-item .date { font-size: 0.8rem; color: var(--text-secondary); }
@@ -222,7 +222,7 @@
     transition: transform 0.2s;
 }
 .rec-card:hover { transform: translateY(-5px); }
-[data-theme="light"] .rec-card { border-color: #E5E7EB; }
+[data-theme="light"] .rec-card { border-color: #D1D5DB; }
 .rec-card img {
     width: 100%;
     height: 140px;
