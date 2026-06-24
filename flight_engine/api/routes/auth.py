@@ -42,21 +42,30 @@ async def google_callback(code: str, db: AsyncSession = Depends(get_db_session))
             "redirect_uri": redirect_uri,
             "grant_type": "authorization_code",
         }
-        async with httpx.AsyncClient() as client:
-            token_response = await client.post(token_url, data=data)
-            if token_response.status_code != 200:
-                raise HTTPException(status_code=400, detail="Failed to exchange token with Google")
-            
-            token_data = token_response.json()
-            access_token = token_data.get("access_token")
-            
-            # Fetch User Info
-            userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
-            userinfo_response = await client.get(userinfo_url, headers={"Authorization": f"Bearer {access_token}"})
-            if userinfo_response.status_code != 200:
-                raise HTTPException(status_code=400, detail="Failed to fetch user info from Google")
+        try:
+            async with httpx.AsyncClient(timeout=15.0) as client:
+                token_response = await client.post(token_url, data=data)
+                if token_response.status_code != 200:
+                    raise HTTPException(status_code=400, detail=f"Failed to exchange token with Google: {token_response.text}")
                 
-            user_info = userinfo_response.json()
+                token_data = token_response.json()
+                access_token = token_data.get("access_token")
+                
+                # Fetch User Info
+                userinfo_url = "https://www.googleapis.com/oauth2/v3/userinfo"
+                userinfo_response = await client.get(userinfo_url, headers={"Authorization": f"Bearer {access_token}"})
+                if userinfo_response.status_code != 200:
+                    raise HTTPException(status_code=400, detail="Failed to fetch user info from Google")
+                    
+                user_info = userinfo_response.json()
+        except httpx.RequestError as exc:
+            import logging
+            logging.error(f"HTTPX error connecting to Google: {exc}")
+            raise HTTPException(status_code=500, detail=f"Conexão com os servidores do Google falhou: {str(exc)}")
+        except Exception as e:
+            import logging
+            logging.error(f"Unexpected error in Google Callback: {e}")
+            raise HTTPException(status_code=500, detail=f"Erro inesperado no servidor: {str(e)}")
 
     return await _process_social_login(db, user_info, "google")
 
