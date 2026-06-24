@@ -419,3 +419,62 @@ input:checked + .slider:before { transform: translateX(20px); }
     from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
 }
+
+/* Result Cards Responsividade */
+.result-card {
+    background: var(--bg-main);
+    padding: 16px;
+    border-radius: 8px;
+    margin-bottom: 12px;
+    border: 1px solid rgba(255,255,255,0.05);
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.hotel-thumb {
+    width: 80px;
+    height: 80px;
+    border-radius: 8px;
+    object-fit: cover;
+}
+
+.info-section {
+    flex: 1;
+}
+
+.price-section {
+    text-align: right;
+    min-width: 120px;
+}
+
+/* Telas de Celular */
+@media (max-width: 600px) {
+    .result-card {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 12px;
+        padding: 12px;
+    }
+
+    .hotel-thumb {
+        width: 100% !important;
+        height: 140px !important;
+    }
+
+    .price-section {
+        text-align: left !important;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        padding-top: 12px;
+        margin-top: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+
+    .price-section a.btn-magic {
+        width: auto !important;
+        margin-top: 0 !important;
+    }
+}

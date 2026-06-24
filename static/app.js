@@ -214,15 +214,15 @@ window.performSearch = async function() {
             let hotelsHtml = '';
             if(data && data.length > 0) {
                 hotelsHtml = data.map(h => `
-                    <div style="background: var(--bg-main); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 16px; align-items: center;">
-                        <img src="${h.photo_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=100&q=80'}" style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover;">
-                        <div style="flex: 1;">
+                    <div class="result-card">
+                        <img src="${h.photo_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=100&q=80'}" class="hotel-thumb">
+                        <div class="info-section">
                             <strong style="color: var(--primary); font-size: 1.1rem;">${h.name}</strong> 
                             <span style="color: #F59E0B; margin-left: 8px;">${'★'.repeat(h.stars || 0)}${'☆'.repeat(Math.max(0, 5-(h.stars || 0)))}</span><br>
                             <span style="font-size: 0.9rem; color: var(--text-secondary)">${(h.type || 'Hotel').toUpperCase()} • Nota: ${h.rating}/10 (${h.reviews_count || 0} avaliações)</span><br>
                             <span style="font-size: 0.85rem; color: var(--text-secondary)">A ${h.distance_center}km do centro</span>
                         </div>
-                        <div style="text-align: right; min-width: 120px;">
+                        <div class="price-section">
                             <span style="font-size: 0.8rem; color: var(--text-secondary)">Diária a partir de</span><br>
                             <strong style="font-size: 1.2rem; color: var(--success)">R$ ${parseFloat(h.price_per_night).toFixed(2)}</strong><br>
                             <a href="https://www.google.com/travel/search?q=${encodeURIComponent('Hotel ' + h.name)}" target="_blank" rel="noopener noreferrer" class="btn-magic" style="padding: 6px 12px; font-size: 0.85rem; margin-top: 8px; width: 100%; display: block; text-align: center; text-decoration: none;">Reservar</a>
@@ -286,13 +286,13 @@ window.performSearch = async function() {
         let flightsHtml = '';
         if(data.flights && data.flights.outbound && data.flights.outbound.length > 0) {
             flightsHtml = data.flights.outbound.map(f => `
-                <div style="background: var(--bg-main); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; justify-content: space-between; align-items: center;">
-                    <div>
+                <div class="result-card">
+                    <div class="info-section">
                         <strong style="color: var(--primary)">${f.airline}</strong><br>
                         <span>${new Date(f.departure_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})} - ${new Date(f.arrival_date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
                         <div style="font-size: 0.8rem; color: var(--text-secondary)">${f.origin} → ${f.destination} (${f.duration})</div>
                     </div>
-                    <div style="text-align: right;">
+                    <div class="price-section">
                         <strong style="font-size: 1.2rem; color: var(--success)">R$ ${parseFloat(f.price).toFixed(2)}</strong><br>
                         <a href="${f.booking_url}" target="_blank" rel="noopener noreferrer" class="btn-magic" style="padding: 8px 16px; font-size: 0.9rem; margin-top: 8px; display: inline-block; text-decoration: none; position: relative; z-index: 9999;">Comprar</a>
                     </div>
@@ -305,15 +305,15 @@ window.performSearch = async function() {
         let hotelsHtml = '';
         if(data.accommodations && data.accommodations.length > 0) {
             hotelsHtml = data.accommodations.map(h => `
-                <div style="background: var(--bg-main); padding: 16px; border-radius: 8px; margin-bottom: 12px; border: 1px solid rgba(255,255,255,0.05); display: flex; gap: 16px; align-items: center;">
-                    <img src="${h.photo_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=100&q=80'}" style="width: 80px; height: 80px; border-radius: 8px; object-fit: cover;">
-                    <div style="flex: 1;">
+                <div class="result-card">
+                    <img src="${h.photo_url || 'https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=100&q=80'}" class="hotel-thumb">
+                    <div class="info-section">
                         <strong style="color: var(--primary); font-size: 1.1rem;">${h.name}</strong> 
                         <span style="color: #F59E0B; margin-left: 8px;">${'★'.repeat(h.stars || 0)}${'☆'.repeat(Math.max(0, 5-(h.stars || 0)))}</span><br>
                         <span style="font-size: 0.9rem; color: var(--text-secondary)">${(h.type || 'Hotel').toUpperCase()} • Nota: ${h.rating}/10 (${h.reviews_count || 0} avaliações)</span><br>
                         <span style="font-size: 0.85rem; color: var(--text-secondary)">A ${h.distance_center}km do centro</span>
                     </div>
-                    <div style="text-align: right; min-width: 120px;">
+                    <div class="price-section">
                         <span style="font-size: 0.8rem; color: var(--text-secondary)">Diária a partir de</span><br>
                         <strong style="font-size: 1.2rem; color: var(--success)">R$ ${parseFloat(h.price_per_night).toFixed(2)}</strong><br>
                         <a href="https://www.google.com/travel/search?q=${encodeURIComponent('Hotel ' + h.name)}" target="_blank" rel="noopener noreferrer" class="btn-magic" style="padding: 6px 12px; font-size: 0.85rem; margin-top: 8px; width: 100%; display: block; text-align: center; text-decoration: none;">Reservar</a>

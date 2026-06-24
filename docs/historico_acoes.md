@@ -35,8 +35,13 @@ Este documento mantém o registro das últimas manutenções, correções de bug
 - **Causa:** No painel de desenvolvedores do Facebook, a URL de callback (`https://www.partviajar.com.br/api/v1/auth/facebook/callback`) estava sendo inserida na seção incorreta (Compartilhamentos) em vez das configurações exclusivas do produto "Login do Facebook". Além disso, estava faltando a URL da Política de Privacidade para habilitar o salvamento.
 - **Ação:** Instruções detalhadas para navegar no novo layout do *Facebook Developers* (Casos de uso -> Autenticação e criação da conta -> Configurações -> URIs de redirecionamento do OAuth válidos), onde a URL com `https://` foi corretamente inserida e salva, liberando o login.
 
+### 6. Ajuste de Layout no Menu do Usuário (CSS)
+- **Problema:** Nomes de e-mails muito longos (ex: `alexandresantoscarioca1@gmail.com`) estavam estourando a largura do menu suspenso do usuário no painel (`dashboard.html`), quebrando o layout.
+- **Ação:** Inserimos as regras de formatação de texto (`overflow: hidden`, `text-overflow: ellipsis`, `white-space: nowrap`) na classe `.user-info` e em seus elementos filhos (`.name` e `.email`) dentro do arquivo `static/styles/index.css`. Com isso, textos excessivamente grandes ganham reticências automaticamente em vez de desconfigurar o design.
+
 ---
 
 ## 🎯 Onde Paramos / Próximos Passos
 - A infraestrutura de autenticação via Google e Facebook está totalmente funcional, autorizada e parametrizada em produção.
+- O layout do menu do usuário está refinado e seguro contra quebras por conta de nomes extensos.
 - As próximas atividades devem focar em finalizar a implementação do mapa iterativo no frontend e backend (baseado no `accommodation_service` e no arquivo `map.py` que estava sendo editado).
