@@ -71,6 +71,7 @@ Este documento mantém o registro das últimas manutenções, correções de bug
   - **Radar de POIs (Pontos de Interesse):** Sem necessidade de sobrecarregar o backend com requisições, o próprio frontend (JavaScript) escuta o evento `moveend` do Leaflet e dispara uma busca para a **Overpass API** do OpenStreetMap, descobrindo 🏨 Hotéis, ✈️ Aeroportos e 🚌 Rodoviárias visíveis no enquadramento, preenchendo a região com ícones dinâmicos personalizados.
   - **Afiliados nos POIs:** Ao clicar em um hotel no mapa, o pop-up dinâmico agora gera um botão "Reservar no Booking" com a ID de afiliado do usuário, pré-preenchendo o nome do hotel exato na busca do Booking. Aeroportos redirecionam com um botão azul para o Skyscanner.
   - **Barra de Busca Inteligente no Mapa:** Para explorar lugares globais, foi inserida uma barra de texto acima do mapa. O usuário escreve uma cidade (Ex: Tóquio), a requisição bate na API do Nominatim, encontra as coordenadas e centraliza a tela ali em segundos.
+  - **Modo de Expansão (Modal Suspenso):** Adição de um botão "⛶" para ampliar o mapa. Ao invés de usar o recurso bruto de tela cheia do navegador, o mapa se torna um modal suspenso, ocupando 85% da tela com um sombreamento de fundo (estilo cinema). Também foi adicionado um botão flutuante inteligente "✖" para sair do modo de expansão de forma intuitiva, sem sobrescrever ou vazar eventos de clique para o Leaflet.
 
 ---
 

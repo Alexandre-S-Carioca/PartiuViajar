@@ -103,6 +103,7 @@ export function renderDashboard() {
                     <div style="display: flex; gap: 8px; align-items: center;">
                         <input type="text" id="map-search-input" placeholder="Ex: Paris, Tóquio..." style="padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border-color); background: var(--bg-primary); color: var(--text-primary); font-size: 0.85rem; width: 160px;" onkeypress="if(event.key === 'Enter') window.searchMapDestination()">
                         <button onclick="window.searchMapDestination()" style="padding: 6px 12px; border-radius: 6px; background: var(--primary-color); color: white; border: none; cursor: pointer; font-size: 0.85rem;">Buscar</button>
+                        <button onclick="window.toggleMapFullscreen()" title="Tela Cheia" style="padding: 4px 8px; border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; font-size: 1rem;">⛶</button>
                     </div>
                 </div>
                 <div class="panel-content" style="flex: 1; padding: 0;">

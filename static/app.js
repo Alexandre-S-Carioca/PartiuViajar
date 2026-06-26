@@ -668,4 +668,59 @@ window.searchMapDestination = async function() {
     }
 };
 
+window.toggleMapFullscreen = function() {
+    const mapContainer = document.getElementById('dashboard-map');
+    if (!mapContainer) return;
+    
+    // Injeta o estilo do mapa suspenso (modal) se não existir
+    if (!document.getElementById('map-suspended-style')) {
+        const style = document.createElement('style');
+        style.id = 'map-suspended-style';
+        style.innerHTML = `
+            .map-suspended {
+                position: fixed !important;
+                top: 50% !important;
+                left: 50% !important;
+                transform: translate(-50%, -50%) !important;
+                width: 85vw !important;
+                height: 85vh !important;
+                z-index: 9999 !important;
+                box-shadow: 0 0 0 100vw rgba(0,0,0,0.7), 0 10px 40px rgba(0,0,0,0.5) !important;
+                border-radius: 16px !important;
+                border: 2px solid var(--border-color) !important;
+                transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    mapContainer.classList.toggle('map-suspended');
+    
+    // Cria ou atualiza o botão X (Fechar) dentro do mapa
+    let closeBtn = document.getElementById('map-close-btn');
+    if (mapContainer.classList.contains('map-suspended')) {
+        if (!closeBtn) {
+            closeBtn = document.createElement('button');
+            closeBtn.id = 'map-close-btn';
+            closeBtn.innerHTML = '✖';
+            closeBtn.title = 'Sair do Modo Suspenso';
+            closeBtn.style.cssText = 'position: absolute; top: 16px; right: 16px; z-index: 10000; background: var(--bg-primary); border: 1px solid var(--border-color); color: var(--text-primary); border-radius: 50%; width: 40px; height: 40px; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 16px rgba(0,0,0,0.4);';
+            // Impede que o clique no botão vaze para o Leaflet
+            closeBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                window.toggleMapFullscreen();
+            });
+            mapContainer.appendChild(closeBtn);
+        }
+        closeBtn.style.display = 'flex';
+    } else {
+        if (closeBtn) closeBtn.style.display = 'none';
+    }
+    
+    if (window._dashboardMap) {
+        // Dá um tempo para a transição do CSS antes de forçar a re-renderização do Leaflet
+        setTimeout(() => window._dashboardMap.invalidateSize(), 350);
+    }
+};
+
 document.addEventListener('DOMContentLoaded', initUI);
