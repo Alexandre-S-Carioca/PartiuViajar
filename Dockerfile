@@ -30,7 +30,7 @@ RUN playwright install chromium && \
 
 # Copiar o código fonte do backend para a imagem
 COPY flight_engine /app/flight_engine
-COPY static /app/flight_engine/static
+COPY static /app/static
 
 # Definir o workdir principal como a pasta do flight_engine
 WORKDIR /app/flight_engine
