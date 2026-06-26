@@ -51,6 +51,8 @@ services:
       - SITE_URL=${SITE_URL}
     ports:
       - "8000:8000"
+    volumes:
+      - ./static:/app/static
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 4
     depends_on:
       redis:
