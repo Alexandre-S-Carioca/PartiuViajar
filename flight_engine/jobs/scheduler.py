@@ -8,6 +8,7 @@ scheduler = AsyncIOScheduler()
 from sqlalchemy import select, func
 from infrastructure.db import AsyncSessionLocal
 from infrastructure.models import PriceAlertModel, FlightModel
+from services.notification_service import NotificationService
 
 async def periodic_price_update():
     logger.info("Running periodic_price_update job")
@@ -48,9 +49,13 @@ async def check_price_alerts():
                 cheapest = flight_res.scalar_one_or_none()
                 
                 if cheapest and cheapest.price <= alert.target_price:
-                    logger.warning(
-                        f"[ALERTA DE PREÇO DISPARADO] Rota {alert.origin} -> {alert.destination} por R$ {cheapest.price:.2f}! "
-                        f"Alvo: R$ {alert.target_price:.2f}. Enviando e-mail para: {alert.email} | Telegram: {alert.telegram_chat_id or 'N/D'}"
+                    NotificationService.send_price_alert(
+                        email=alert.email,
+                        origin=alert.origin,
+                        destination=alert.destination,
+                        target_price=float(alert.target_price),
+                        current_price=float(cheapest.price),
+                        telegram_chat_id=alert.telegram_chat_id
                     )
     except Exception as e:
         logger.error(f"Error checking price alerts: {e}")

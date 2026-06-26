@@ -15,7 +15,7 @@ def parse_duration(s: str) -> int:
     match_h = re.search(r'(\d+)h', s)
     if match_h:
         hours = int(match_h.group(1))
-    match_m = re.search(r'(\d+)min', s)
+    match_m = re.search(r'(\d+)m', s)
     if match_m:
         minutes = int(match_m.group(1))
     return hours * 60 + minutes
@@ -85,9 +85,11 @@ class KayakCollector(BaseCollector):
                             # Duração
                             for j in reversed(search_range):
                                 cand = lines[j]
-                                if re.search(r'^\d+h(\s*\d+min)?$', cand) or re.search(r'^\d+min$', cand):
-                                    duration_val = parse_duration(cand)
-                                    break
+                                if re.search(r'\d+\s*h', cand.lower()) or re.search(r'\d+\s*m', cand.lower()):
+                                    d_val = parse_duration(cand)
+                                    if d_val > 0 and d_val < 6000:
+                                        duration_val = d_val
+                                        break
                             
                             # Escalas
                             for j in reversed(search_range):
@@ -107,16 +109,21 @@ class KayakCollector(BaseCollector):
                                         actual_destination = dest_cand[:3]
                                     break
                                     
-                            # Horário exato de partida
-                            for j in reversed(search_range):
-                                if re.search(r'\d{1,2}:\d{2}\s*.\s*\d{1,2}:\d{2}', lines[j]):
-                                    times = re.findall(r'(\d{1,2}):(\d{2})', lines[j])
-                                    if len(times) >= 2:
-                                        dep_hour, dep_min = map(int, times[0])
-                                        departure_datetime = departure_date.replace(hour=dep_hour, minute=dep_min)
-                                    break
-                                    
-                            arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
+                            # Horário exato de partida e chegada
+                            time_matches = []
+                            for j in search_range:
+                                matches = re.findall(r'\d{1,2}:\d{2}', lines[j])
+                                time_matches.extend(matches)
+                                
+                            if len(time_matches) >= 2:
+                                dep_hour, dep_min = map(int, time_matches[0].split(':'))
+                                departure_datetime = departure_date.replace(hour=dep_hour, minute=dep_min)
+                                arr_hour, arr_min = map(int, time_matches[1].split(':'))
+                                arrival_datetime = departure_date.replace(hour=arr_hour, minute=arr_min)
+                                if arrival_datetime < departure_datetime:
+                                    arrival_datetime += timedelta(days=1)
+                            else:
+                                arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
 
                             # Tenta pegar um provável nome de companhia nas linhas anteriores.
                             airline_candidate = "Múltiplas/Kayak"
@@ -143,9 +150,13 @@ class KayakCollector(BaseCollector):
                                 break
                                 
                             # Validar se o voo é válido
-                            bad_airlines = ["direto", "escala", "parada", "fortaleza", "santiago", "pinto martins", "arturo merino", "selecionar", "basic", "plus", "econômica", "economica", "oferta", "decolar", "todas as"]
+                            bad_airlines = ["direto", "escala", "parada", "fortaleza", "são paulo", "rio de janeiro", "lisboa", "miami", "santiago", "pinto martins", "arturo merino", "selecionar", "basic", "plus", "econômica", "economica", "oferta", "decolar", "todas as", "múltiplas"]
                             if any(x in airline_candidate.lower() for x in bad_airlines) or len(airline_candidate) > 30:
-                                continue
+                                # Tentativa de fallback para o nome da companhia verdadeira usando padrões conhecidos
+                                for cand in lines[max(0, i-15):i]:
+                                    if any(x in cand.lower() for x in ["azul", "gol", "latam", "american", "tap", "copa", "avianca"]):
+                                        airline_candidate = cand
+                                        break
 
                             flights.append(Flight(
                                 airline=airline_candidate,

@@ -1,6 +1,6 @@
-import { renderDashboard } from './pages/dashboard.js';
+import { renderDashboard } from './pages/dashboard.js?v=3';
 import { renderFavorites } from './pages/favorites.js';
-import { renderAlerts } from './pages/alerts.js';
+import { renderAlerts } from './pages/alerts.js?v=7';
 import { renderHistory } from './pages/history.js';
 import { renderDestinations } from './pages/destinations.js';
 import { renderPreferences } from './pages/preferences.js';
@@ -25,6 +25,13 @@ function initUI() {
     setupDropdown();
     setupThemeToggle();
     setupSearchBar();
+    
+    // Restaurar localização salva se houver
+    const savedLocation = localStorage.getItem('user_location');
+    if (savedLocation) {
+        const btnText = document.getElementById('location-text');
+        if (btnText) btnText.innerText = savedLocation;
+    }
     
     // Remove o fragmento #_=_ que o Facebook injeta no redirecionamento
     if (window.location.hash === '#_=_') {
@@ -247,10 +254,22 @@ window.performSearch = async function() {
         overlay.classList.add('show');
         
         body.innerHTML = `
-            <div style="text-align: center; padding: 40px;">
-                <div class="typing-indicator" style="margin-bottom: 20px;"><span></span><span></span><span></span></div>
-                <h4>Buscando os melhores hotéis e acomodações...</h4>
-                <p style="color: var(--text-secondary)">Isso pode levar alguns segundos.</p>
+            <div style="margin-bottom: 30px;">
+                <div class="skeleton skeleton-title" style="width: 60%; max-width: 300px; margin-bottom: 15px;"></div>
+                ${[1, 2, 3].map(() => `
+                <div class="result-card skeleton-wrapper">
+                    <div class="skeleton skeleton-card" style="width: 80px; height: 80px; flex-shrink: 0;"></div>
+                    <div class="info-section" style="width: 100%;">
+                        <div class="skeleton skeleton-text" style="width: 70%; height: 20px; margin-bottom: 10px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 50%; margin-bottom: 6px;"></div>
+                        <div class="skeleton skeleton-text" style="width: 40%;"></div>
+                    </div>
+                    <div class="price-section" style="min-width: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div class="skeleton skeleton-text" style="width: 100%; height: 24px; align-self: flex-end;"></div>
+                        <div class="skeleton skeleton-card" style="width: 100%; height: 32px; border-radius: 4px; margin-top: 8px;"></div>
+                    </div>
+                </div>
+                `).join('')}
             </div>
         `;
 
@@ -320,10 +339,21 @@ window.performSearch = async function() {
     overlay.classList.add('show');
     
     body.innerHTML = `
-        <div style="text-align: center; padding: 40px;">
-            <div class="typing-indicator" style="margin-bottom: 20px;"><span></span><span></span><span></span></div>
-            <h4>Buscando as melhores opções em várias companhias...</h4>
-            <p style="color: var(--text-secondary)">Isso pode levar alguns segundos, o Partiu Viajar está vasculhando a internet.</p>
+        <div style="margin-bottom: 30px;">
+            <div class="skeleton skeleton-title" style="width: 70%; max-width: 350px; margin-bottom: 15px;"></div>
+            ${[1, 2, 3].map(() => `
+            <div class="result-card skeleton-wrapper">
+                <div class="info-section" style="width: 100%;">
+                    <div class="skeleton skeleton-text" style="width: 30%; height: 18px; margin-bottom: 12px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 60%; height: 14px; margin-bottom: 8px;"></div>
+                    <div class="skeleton skeleton-text" style="width: 40%; height: 12px;"></div>
+                </div>
+                <div class="price-section" style="min-width: 120px; display: flex; flex-direction: column; justify-content: space-between;">
+                    <div class="skeleton skeleton-text" style="width: 100%; height: 26px; align-self: flex-end;"></div>
+                    <div class="skeleton skeleton-card" style="width: 100%; height: 35px; border-radius: 4px; margin-top: 8px;"></div>
+                </div>
+            </div>
+            `).join('')}
         </div>
     `;
 
@@ -406,11 +436,11 @@ window.performSearch = async function() {
 
 // Search Bar Interactive Autocomplete
 function setupSearchBar() {
-    setupAutocompleteForInput('origin-input', 'origin-autocomplete');
-    setupAutocompleteForInput('destination-input', 'destination-autocomplete');
+    window.setupAutocompleteForInput('origin-input', 'origin-autocomplete');
+    window.setupAutocompleteForInput('destination-input', 'destination-autocomplete');
 }
 
-function setupAutocompleteForInput(inputId, dropdownId) {
+window.setupAutocompleteForInput = function(inputId, dropdownId) {
     const input = document.getElementById(inputId);
     const dropdown = document.getElementById(dropdownId);
     if (!input || !dropdown) return;
@@ -533,20 +563,28 @@ function setupDropdown() {
     });
 }
 
+
+
 function setupThemeToggle() {
-    const switches = document.querySelectorAll('input[type="checkbox"]');
+    const btns = document.querySelectorAll('.theme-toggle');
     const savedTheme = localStorage.getItem('theme') || 'dark';
     
     document.body.setAttribute('data-theme', savedTheme);
-    switches.forEach(s => s.checked = savedTheme === 'dark');
-
-    switches.forEach(s => {
-        s.addEventListener('change', (e) => {
-            const newTheme = e.target.checked ? 'dark' : 'light';
+    
+    btns.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const current = document.body.getAttribute('data-theme');
+            const newTheme = current === 'dark' ? 'light' : 'dark';
             document.body.setAttribute('data-theme', newTheme);
             localStorage.setItem('theme', newTheme);
-            switches.forEach(sw => sw.checked = e.target.checked);
+            // Muda o ícone
+            btns.forEach(b => {
+                b.innerHTML = newTheme === 'dark' ? '🌙' : '☀️';
+            });
         });
+        
+        // Define icone inicial
+        btn.innerHTML = savedTheme === 'dark' ? '🌙' : '☀️';
     });
 }
 
@@ -603,12 +641,33 @@ window.resetSearchAndHome = function() {
 };
 
 window.locateMe = function() {
+    const btnText = document.getElementById('location-text');
     if ("geolocation" in navigator) {
-        window.showToast("Buscando sua localização...", "info");
-        navigator.geolocation.getCurrentPosition((position) => {
+        if(btnText) btnText.innerText = "Buscando...";
+        navigator.geolocation.getCurrentPosition(async (position) => {
             const lat = position.coords.latitude;
             const lon = position.coords.longitude;
             window.showToast("Localização encontrada!", "success");
+            
+            // Reverse Geocoding
+            try {
+                const resp = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}`);
+                if(resp.ok) {
+                    const data = await resp.json();
+                    if(data && data.address) {
+                        const city = data.address.city || data.address.town || data.address.municipality || 'Desconhecido';
+                        const state = data.address.state || '';
+                        if(btnText) btnText.innerText = `${city}-${state}`;
+                        localStorage.setItem('user_location', `${city}-${state}`);
+                        localStorage.setItem('user_lat', lat);
+                        localStorage.setItem('user_lon', lon);
+                    } else {
+                        if(btnText) btnText.innerText = 'Localização';
+                    }
+                }
+            } catch(e) {
+                if(btnText) btnText.innerText = 'Localização';
+            }
             
             if (window._dashboardMap) {
                 window._dashboardMap.setView([lat, lon], 12);
@@ -623,6 +682,7 @@ window.locateMe = function() {
                 }, 500);
             }
         }, (error) => {
+            if(btnText) btnText.innerText = 'Localização';
             window.showToast("Erro ao obter localização. Permissão negada ou indisponível.", "error");
         }, {
             enableHighAccuracy: true,

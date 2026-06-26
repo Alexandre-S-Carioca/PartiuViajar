@@ -47,7 +47,8 @@ services:
     ports:
       - "127.0.0.1:8000:8000"
     volumes:
-      - ./static:/app/flight_engine/static
+      - ./static:/app/static
+      - ./flight_engine:/app/flight_engine
     command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --workers 2
     depends_on:
       redis:
@@ -65,6 +66,8 @@ services:
       - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${DB_HOST}:${DB_PORT}/${POSTGRES_DB}
       - REDIS_URL=redis://redis:6379/0
       - DEBUG=False
+    volumes:
+      - ./flight_engine:/app/flight_engine
     # É recomendável ter mais threads (ou processos) para workers executarem playwright em paralelo
     command: python -m dramatiq workers.tasks -p 2 -t 2
     depends_on:

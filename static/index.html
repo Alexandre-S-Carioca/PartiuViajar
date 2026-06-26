@@ -8,9 +8,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/styles/index.css?v=3">
-    <link rel="stylesheet" href="/static/styles/dashboard.css?v=3">
-    <link rel="stylesheet" href="/static/styles/premium.css">
+    <link rel="stylesheet" href="/static/styles/index.css?v=10">
+    <link rel="stylesheet" href="/static/styles/dashboard.css?v=5">
+    <link rel="stylesheet" href="/static/styles/premium.css?v=1">
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -33,13 +33,7 @@
             </nav>
 
             <div class="sidebar-footer">
-                <div class="theme-toggle">
-                    <span class="icon">🌙</span> Tema escuro
-                    <label class="switch">
-                        <input type="checkbox" id="theme-switch">
-                        <span class="slider round"></span>
-                    </label>
-                </div>
+
                 <a href="#" class="nav-item"><span class="icon">❓</span> Ajuda</a>
                 <a href="#" class="nav-item logout"><span class="icon">🚪</span> Sair</a>
             </div>
@@ -55,8 +49,10 @@
                 </div>
                 
                 <div class="topbar-actions">
-                    <button class="icon-btn" onclick="window.locateMe()" title="Minha Localização">📍</button>
-                    <button class="icon-btn theme-toggle" title="Alternar tema escuro">🌙</button>
+                    <button class="location-btn" onclick="window.locateMe()" title="Minha Localização">
+                        <span class="icon">📍</span> <span id="location-text">Localização</span>
+                    </button>
+                    <button class="icon-btn theme-toggle" title="Alternar tema">🌙</button>
                     <div class="user-dropdown-trigger" id="user-menu-btn">
                         <img src="https://ui-avatars.com/api/?name=Visitante&background=ccc&color=fff" alt="Visitante" class="avatar" id="topbar-avatar">
                         <span class="user-name" id="topbar-name">Visitante <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
@@ -80,7 +76,7 @@
                             <li class="auth-required"><a href="#/history"><span class="icon">🕒</span> Histórico de buscas</a></li>
                             <li><a href="#/preferences"><span class="icon">⚙️</span> Preferências</a></li>
                             <li class="divider"></li>
-                            <li><div class="theme-toggle-inline"><span class="icon">🌙</span> Tema escuro <label class="switch"><input type="checkbox"><span class="slider round"></span></label></div></li>
+
                             <li><a href="#/help"><span class="icon">❓</span> Ajuda</a></li>
                             <li class="divider"></li>
                             <li><a href="#" onclick="window.logout(); return false;" class="logout" id="menu-logout-btn"><span class="icon">🚪</span> Sair</a></li>
@@ -166,6 +162,6 @@
     </div>
 
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script type="module" src="/static/app.js?v=20"></script>
+    <script type="module" src="/static/app.js?v=29"></script>
 </body>
 </html>

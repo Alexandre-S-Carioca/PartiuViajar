@@ -105,63 +105,6 @@ export function renderDashboard() {
             </div>
         </div>
 
-        <!-- Recommended section -->
-        <div class="recommended-section">
-            <div class="panel-header mb-15">
-                <h3>Recomendado para você</h3>
-                <a href="#" class="link-btn">Ver mais recomendações</a>
-            </div>
-            <div class="cards-carousel">
-                <!-- Card 1 -->
-                <a href="https://www.google.com/travel/search?q=Porto+de+Galinhas" target="_blank" style="text-decoration: none; color: inherit; display: block;" class="rec-card">
-                    <img src="https://images.unsplash.com/photo-1590523741831-ab7e8b8f9c7f?auto=format&fit=crop&w=300&q=80" alt="Porto de Galinhas">
-                    <div class="rec-info">
-                        <h4>Porto de Galinhas</h4>
-                        <span class="loc">Pernambuco</span>
-                        <div class="rec-price">
-                            <span class="from">A partir de</span>
-                            <strong>R$ 540</strong>
-                        </div>
-                    </div>
-                </a>
-                <!-- Card 2 -->
-                <a href="https://www.google.com/travel/search?q=Maceio" target="_blank" style="text-decoration: none; color: inherit; display: block;" class="rec-card">
-                    <img src="https://images.unsplash.com/photo-1580052614034-c55d20bfee3b?auto=format&fit=crop&w=300&q=80" alt="Maceió">
-                    <div class="rec-info">
-                        <h4>Maceió</h4>
-                        <span class="loc">Alagoas</span>
-                        <div class="rec-price">
-                            <span class="from">A partir de</span>
-                            <strong>R$ 480</strong>
-                        </div>
-                    </div>
-                </a>
-                <!-- Card 3 -->
-                <a href="https://www.google.com/travel/search?q=Sao+Paulo" target="_blank" style="text-decoration: none; color: inherit; display: block;" class="rec-card">
-                    <img src="https://images.unsplash.com/photo-1543007630-9710e4a00a20?auto=format&fit=crop&w=300&q=80" alt="São Paulo">
-                    <div class="rec-info">
-                        <h4>São Paulo</h4>
-                        <span class="loc">São Paulo</span>
-                        <div class="rec-price">
-                            <span class="from">A partir de</span>
-                            <strong>R$ 430</strong>
-                        </div>
-                    </div>
-                </a>
-                <!-- Card 4 -->
-                <a href="https://www.google.com/travel/search?q=Lisboa" target="_blank" style="text-decoration: none; color: inherit; display: block;" class="rec-card">
-                    <img src="https://images.unsplash.com/photo-1585208798174-6cedd86e019a?auto=format&fit=crop&w=300&q=80" alt="Lisboa">
-                    <div class="rec-info">
-                        <h4>Lisboa</h4>
-                        <span class="loc">Portugal</span>
-                        <div class="rec-price">
-                            <span class="from">A partir de</span>
-                            <strong>R$ 2.800</strong>
-                        </div>
-                    </div>
-                </a>
-            </div>
-        </div>
         `;
     } else {
         premiumContent = `
@@ -205,16 +148,26 @@ export function renderDashboard() {
             if (mapEl._leaflet_id) { mapEl._leaflet_id = null; }
             if (window._dashboardMap) { window._dashboardMap.remove(); }
             
-            const map = L.map(mapEl).setView([-14.235, -51.925], 4);
+            const savedLat = localStorage.getItem('user_lat');
+            const savedLon = localStorage.getItem('user_lon');
+            
+            let map;
+            if (savedLat && savedLon) {
+                map = L.map(mapEl).setView([parseFloat(savedLat), parseFloat(savedLon)], 12);
+                L.marker([parseFloat(savedLat), parseFloat(savedLon)]).addTo(map).bindPopup('Sua última localização!').openPopup();
+            } else {
+                map = L.map(mapEl).setView([-14.235, -51.925], 4);
+                L.marker([-3.7172, -38.5433]).addTo(map).bindPopup('Fortaleza, CE');
+                L.marker([-23.5505, -46.6333]).addTo(map).bindPopup('São Paulo, SP');
+                L.marker([-22.9068, -43.1729]).addTo(map).bindPopup('Rio de Janeiro, RJ');
+                L.marker([-30.0346, -51.2177]).addTo(map).bindPopup('Porto Alegre, RS');
+                L.marker([-8.5028, -34.9962]).addTo(map).bindPopup('Porto de Galinhas, PE');
+            }
+
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
             
-            L.marker([-3.7172, -38.5433]).addTo(map).bindPopup('Fortaleza, CE');
-            L.marker([-23.5505, -46.6333]).addTo(map).bindPopup('São Paulo, SP');
-            L.marker([-22.9068, -43.1729]).addTo(map).bindPopup('Rio de Janeiro, RJ');
-            L.marker([-30.0346, -51.2177]).addTo(map).bindPopup('Porto Alegre, RS');
-            L.marker([-8.5028, -34.9962]).addTo(map).bindPopup('Porto de Galinhas, PE');
             window._dashboardMap = map;
             
             // POI Layer and Fetch logic

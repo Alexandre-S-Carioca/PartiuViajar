@@ -82,7 +82,51 @@ Este documento mantém o registro das últimas manutenções, correções de bug
 
 ---
 
+## 17. Otimização Visual Premium e Tipografia Fluida
+- **Data:** 26/06/2026
+- **Ação:** O painel frontend recebeu atualizações pesadas de percepção de velocidade (UX). Os `spinners` antigos e o indicador de digitação de "Aguarde" foram substituídos por animações elegantes de **Skeleton Screens** (fantasmas dos cartões de voos e hotéis) no arquivo `app.js`.
+- **Tipografia Resiliente:** As diretrizes do `index.css` e `premium.css` foram convertidas de `font-size` fixos para a função CSS `clamp()`. Isso garante que textos de preços, nomes de empresas e títulos de páginas aumentem e diminuam proporcionalmente de acordo com a largura de tela (celular, tablet, desktop) de forma suave, sem quebrar o layout. Além disso, incluímos um *Cache Busting* forçado no `index.html` (`?v=...`) para que a aplicação sempre puxe a folha de estilos mais atual em produção.
+
+## 18. Conserto de Extração de Tempos de Voo (Kayak e Google Flights)
+- **Data:** 26/06/2026
+- **Problema:** A UI exibia horários fixos irreais como "00:00 - 03:00 (180)" para várias rotas e, acidentalmente, trazia o nome do destino ("São Paulo") como sendo a Companhia Aérea do voo.
+- **Causa:** O *DOM* (código fonte) das páginas do Kayak e Google Flights havia sofrido modificações nos agrupamentos textuais de tempo. As rotinas *regex* de raspagem exigiam os horários perfeitamente isolados na mesma linha. Como falhavam, ativavam a rotina de segurança (`fallback`) assumindo 180 ou 120 minutos e o horário 00:00.
+- **Ação:** Os coletores `kayak_collector.py` e `google_flights_collector.py` foram reescritos. As expressões regulares passaram a varrer o conteúdo circundante globalmente em busca do padrão `\d{1,2}:\d{2}`, capturando os dois primeiros que aparecem antes do bloco de preços, além de atualizar o `parse_duration` para captar variáveis como `Xh Ym` (além de "min"). Também foram implementados filtros mais rigorosos para rejeitar nomes de cidades populares como se fossem companhias aéreas ("são paulo", "rio de janeiro", etc).
+
+---
+
+## 19. Ativação do Módulo de Alertas de Preço e Correções de Frontend
+- **Data:** 26/06/2026
+- **Ação:** O recurso de Alertas de Preço (Price Alerts) foi ativado "ponta a ponta". 
+  - **Interface:** O layout provisório de "Funcionalidade em desenvolvimento" foi substituído por um modal de criação de alertas operante e visualmente Premium (tipografia fluida, ícones, botões animados). Adicionada barra de rolagem inteligente ao modal (`max-height: 90vh`) para evitar cortes em telas menores. 
+  - **Backend:** Foram criadas as rotas `GET` e `DELETE` (`alerts.py`) e implementado um serviço simulador `NotificationService` para registrar no servidor (log) os despachos de mensagens de alerta interceptadas pelo robô (`scheduler.py`), evitando dependência direta de um provedor SMTP nesta etapa.
+  - **Bug Fix:** Resolvido erro gravíssimo de "Sintaxe Javascript Inesperada" (crase mal escapada) em `alerts.js` que quebrava o carregamento inteiro do Dashboard.
+  - **Configuração:** O arquivo `docker-compose.yml` local teve seus volumes de `flight_engine` e `static` reajustados. Essa correção permitiu que o Live Reload dos arquivos Python e estáticos fluísse para dentro do contêiner sem a necessidade de paralisar e rodar processos de `--build` repetidamente.
+
+---
+
+## 20. Identidade Visual Definitiva e Aprimoramentos de UI
+- **Data:** 26/06/2026
+- **Ação:** O painel frontend passou por uma reformulação visual para se alinhar a uma estética premium definitiva:
+  - **Paleta de Cores e Tematização:** O sistema de "Modo Claro / Escuro" foi completamente removido, focando o aplicativo em um Modo Escuro (Dark Mode) exclusivo e elegante. As variáveis CSS (`index.css`) foram reescritas para utilizar uma paleta de cores específica: fundos e cards fluindo entre `#0F172A`, `#111827` e `#1E293B`, com botões primários em ciano (`#06B6D4`) e hover em `#0891B2`. Textos e bordas seguiram o mesmo padrão premium (ex: bordas em `#334155`).
+  - **Limpeza do Dashboard:** A antiga seção de "Recomendações" baseada em cards na parte inferior do painel foi excluída (`dashboard.js`), pois o layout central com o mapa interativo já supre essa demanda de descoberta.
+  - **Botão Inteligente de Localização:** O botão de GPS (📍) no canto superior (Topbar) foi expandido. Agora não é apenas um ícone, mas um botão que exibe a localização em tempo real (Ex: "Fortaleza-Ceará"). Para isso, o script `app.js` foi atualizado para, logo após obter a coordenada pelo navegador, invocar a API de Geocodificação Reversa do **Nominatim (OpenStreetMap)**, traduzindo lat/long em Cidade/Estado.
+
+---
+
+## 21. Aprimoramento da Experiência do Usuário: Localização e Autocomplete (Alerta de Preço)
+- **Data:** 26/06/2026
+- **Ação:** Implementação de funcionalidades essenciais de retenção de estado e inteligência de pesquisa:
+    - **Autocomplete nos Alertas de Preço:** A lógica da API de busca de cidades e aeroportos foi exportada globalmente (`setupAutocompleteForInput`) e atrelada aos campos "Origem" e "Destino" do modal de *Novo Alerta de Preço*, trazendo pesquisa amigável por nome de cidade em vez de depender apenas de códigos IATA.
+    - **Tratamento de Erros e Correção no Backend:** O erro onde os avisos de validação do Pydantic (FastAPI) viravam strings confusas (`[object Object]`) foi mitigado traduzindo o array `err.detail`. Além disso, a submissão de valores *nulos* (`null`) no chat_id do telegram que causava crash foi corrigida para passar string vazia padrão (`""`).
+    - **Persistência de Localização Inteligente:** Alterado o comportamento efêmero da geolocalização. Ao clicar no botão inteligente de localização (`locateMe()`), o frontend grava a String do município, a *Latitude* e a *Longitude* no `localStorage`.
+    - **Mapa do Dashboard Sincronizado:** O mapa de calor interativo agora possui leitura de injeção direta de `localStorage`. Caso uma coordenada pessoal seja encontrada, a visualização ignora o centro padrão brasileiro e dá o foco automático na casa do usuário com o marcador *"Sua última localização!"*.
+
+---
+
 ## 📍 Onde Paramos / Próximos Passos
-- O "Buscador de Viagens" já superou o escopo de ser um simples agregador e evoluiu para uma central de planejamento visual extremamente útil (Dashboard).
+- Toda a identidade visual do modo claro e escuro está estável.
+- Testes interativos com autocompletar e persistência de usuário estão funcionando e documentados.
+- Próximo passo pode envolver adicionar mais funcionalidades de busca ou começar a polir a exibição das listas nas telas pendentes. uma identidade visual "Dark Premium" altamente polida e robusta.
 - As rotinas front-end estão altamente integradas e independentes do backend para certas visualizações geoespaciais (Leaflet, Overpass API, Nominatim).
 - Os próximos passos ideais podem envolver aprimorar o módulo de Rastreio de Voos e garantir que a página de Checkout e Reservas (se for haver uma local) siga os links de afiliado com consistência total.

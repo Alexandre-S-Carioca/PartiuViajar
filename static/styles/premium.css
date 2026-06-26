@@ -19,6 +19,9 @@
 .skeleton-text { height: 16px; margin-bottom: 8px; width: 80%; }
 .skeleton-title { height: 24px; margin-bottom: 12px; width: 50%; }
 .skeleton-card { height: 120px; border-radius: var(--border-radius-md); }
+@media (max-width: 600px) {
+    .skeleton-card { height: 90px; }
+}
 
 /* Toasts */
 #toast-container {
@@ -194,7 +197,7 @@
     color: var(--text-secondary);
 }
 .flight-number {
-    font-size: 2rem;
+    font-size: clamp(1.5rem, 4vw, 2rem);
     font-weight: 700;
     letter-spacing: -0.5px;
     background: linear-gradient(90deg, #60A5FA, #A78BFA);
@@ -235,7 +238,7 @@
 .airport-block.text-right { text-align: right; }
 
 .iata-code {
-    font-size: 3rem;
+    font-size: clamp(2rem, 6vw, 3rem);
     font-weight: 800;
     line-height: 1;
     margin-bottom: 5px;
@@ -251,7 +254,7 @@
     margin-left: auto;
 }
 .time-sched {
-    font-size: 1.1rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
     font-weight: 600;
 }
 .time-actual {

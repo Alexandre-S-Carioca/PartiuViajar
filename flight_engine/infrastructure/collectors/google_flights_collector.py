@@ -15,7 +15,7 @@ def parse_duration(s: str) -> int:
     match_h = re.search(r'(\d+)h', s)
     if match_h:
         hours = int(match_h.group(1))
-    match_m = re.search(r'(\d+)min', s)
+    match_m = re.search(r'(\d+)m', s)
     if match_m:
         minutes = int(match_m.group(1))
     return hours * 60 + minutes
@@ -78,9 +78,10 @@ class GoogleFlightsCollector(BaseCollector):
                         # Extraindo a duração
                         duration_val = 120  # fallback
                         for line in lines:
-                            if re.search(r'^\d+\s*h(\s*\d+\s*min)?$', line) or re.search(r'^\d+\s*min$', line):
+                            if re.search(r'\d+\s*h', line.lower()) or re.search(r'\d+\s*m', line.lower()):
                                 duration_val = parse_duration(line)
-                                break
+                                if duration_val > 0:
+                                    break
                                 
                         # Extraindo paradas
                         stops_val = 0
@@ -101,14 +102,24 @@ class GoogleFlightsCollector(BaseCollector):
                                 
                         # Extraindo horários reais e ajustando datas
                         departure_datetime = departure_date
-                        if len(lines) > 0:
-                            time_match = re.search(r'(\d{2}):(\d{2})', lines[0])
-                            if time_match:
-                                hour = int(time_match.group(1))
-                                minute = int(time_match.group(2))
-                                departure_datetime = departure_date.replace(hour=hour, minute=minute)
-                                
-                        arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
+                        arrival_datetime = departure_date + timedelta(minutes=duration_val)
+                        
+                        time_matches = []
+                        for line in lines:
+                            matches = re.findall(r'\d{1,2}:\d{2}', line)
+                            time_matches.extend(matches)
+                            
+                        if len(time_matches) >= 2:
+                            dep_hour, dep_min = map(int, time_matches[0].split(':'))
+                            departure_datetime = departure_date.replace(hour=dep_hour, minute=dep_min)
+                            arr_hour, arr_min = map(int, time_matches[1].split(':'))
+                            arrival_datetime = departure_date.replace(hour=arr_hour, minute=arr_min)
+                            
+                            # Ajuste de virada de dia
+                            if arrival_datetime < departure_datetime:
+                                arrival_datetime += timedelta(days=1)
+                        else:
+                            arrival_datetime = departure_datetime + timedelta(minutes=duration_val)
                         
                         # Extraindo a companhia aérea
                         airline = "Unknown Airline"

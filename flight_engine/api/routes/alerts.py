@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import datetime
 from decimal import Decimal
 from infrastructure.db import get_db_session
@@ -43,3 +44,47 @@ async def create_price_alert(
     db.add(alert)
     await db.commit()
     return {"status": "success", "message": "Alerta de preço cadastrado com sucesso!"}
+
+@router.get("")
+async def get_price_alerts(
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    List all active price alerts.
+    """
+    stmt = select(PriceAlertModel).order_by(PriceAlertModel.created_at.desc())
+    result = await db.execute(stmt)
+    alerts = result.scalars().all()
+    
+    return [
+        {
+            "id": alert.id,
+            "email": alert.email,
+            "origin": alert.origin,
+            "destination": alert.destination,
+            "target_price": float(alert.target_price),
+            "departure_date": alert.departure_date.strftime("%Y-%m-%d"),
+            "is_active": True # Para simular compatibilidade de layout ativo
+        }
+        for alert in alerts
+    ]
+
+@router.delete("/{alert_id}")
+async def delete_price_alert(
+    alert_id: int,
+    db: AsyncSession = Depends(get_db_session)
+):
+    """
+    Delete a specific price alert.
+    """
+    stmt = select(PriceAlertModel).where(PriceAlertModel.id == alert_id)
+    result = await db.execute(stmt)
+    alert = result.scalar_one_or_none()
+    
+    if not alert:
+        raise HTTPException(status_code=404, detail="Alerta não encontrado.")
+        
+    await db.delete(alert)
+    await db.commit()
+    
+    return {"status": "success", "message": "Alerta removido com sucesso!"}
