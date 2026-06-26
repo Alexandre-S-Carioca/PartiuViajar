@@ -50,13 +50,6 @@ export function renderDashboard() {
                     <p>Alertas ativos de preço</p>
                 </div>
             </div>
-            <div class="stat-card" style="--bg: var(--card-dest-bg); --icon-color: var(--card-dest-icon)">
-                <div class="icon-box">📍</div>
-                <div class="stat-info">
-                    <h3>0</h3>
-                    <p>Destinos salvos</p>
-                </div>
-            </div>
         </div>
 
         <!-- 3 Columns Layout -->
@@ -201,22 +194,6 @@ export function renderDashboard() {
                     <span class="badge">${memberSince}</span>
                 </div>
             </div>
-            ${token ? `
-            <div class="level-info">
-                <div class="level-header">
-                    <span class="level-label">NÍVEL ATUAL</span>
-                    <span class="level-title">Explorador ✈️</span>
-                </div>
-                <div class="progress-container">
-                    <div class="progress-texts">
-                        <span>0 pontos</span>
-                        <span class="next-level">Próximo nível: 100 pontos</span>
-                    </div>
-                    <div class="progress-bar">
-                        <div class="progress-fill" style="width: 0%"></div>
-                    </div>
-                </div>
-            </div>` : ''}
         </div>
 
         ${premiumContent}
