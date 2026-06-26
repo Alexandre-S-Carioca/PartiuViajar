@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     FACEBOOK_CLIENT_ID: str = ""
     FACEBOOK_CLIENT_SECRET: str = ""
     AVIATIONSTACK_API_KEY: str = ""
+    RAPIDAPI_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

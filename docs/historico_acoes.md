@@ -124,9 +124,43 @@ Este documento mantém o registro das últimas manutenções, correções de bug
 
 ---
 
-## 📍 Onde Paramos / Próximos Passos
-- Toda a identidade visual do modo claro e escuro está estável.
-- Testes interativos com autocompletar e persistência de usuário estão funcionando e documentados.
-- Próximo passo pode envolver adicionar mais funcionalidades de busca ou começar a polir a exibição das listas nas telas pendentes. uma identidade visual "Dark Premium" altamente polida e robusta.
-- As rotinas front-end estão altamente integradas e independentes do backend para certas visualizações geoespaciais (Leaflet, Overpass API, Nominatim).
-- Os próximos passos ideais podem envolver aprimorar o módulo de Rastreio de Voos e garantir que a página de Checkout e Reservas (se for haver uma local) siga os links de afiliado com consistência total.
+---
+
+## 22. Integração da OpenSky Network — Radar de Voos em Tempo Real
+- **Data:** 26/06/2026
+- **Ação:** A API pública **OpenSky Network** foi integrada ao projeto como fonte principal de telemetria de voos ao vivo.
+  - **Backend:** Criado o coletor `opensky_collector.py` que consulta a endpoint `https://opensky-network.org/api/states/all` com um bounding box geográfico (`lamin`, `lamax`, `lomin`, `lomax`). Os vetores de estado (posição, velocidade, altitude, direção e país de origem) são normalizados em dicionários Python e expostos via nova rota `GET /api/v1/flights/live-radar`.
+  - **Frontend Dashboard:** O mapa do dashboard recebeu uma segunda camada de dados ao vivo (Leaflet `LayerGroup`). A cada 20 segundos, o frontend consulta o backend com as coordenadas do enquadramento atual do mapa e plota ícones de avião ✈️ animados e rotacionados de acordo com a direção de voo real. Aviões já conhecidos têm sua posição atualizada suavemente; novos são adicionados; sumidos são removidos.
+  - **Rate Limiting e Cache:** Para respeitar o limite anônimo da OpenSky (400 req/dia), foi implementado um cache in-memory de 15 segundos no `OpenSkyCollector`. Em caso de recebimento de erro `429 Too Many Requests`, o servidor retorna automaticamente os dados do último cache disponível. O intervalo de atualização do frontend também foi dobrado de 10s para 20s.
+
+---
+
+## 23. Módulo de Rastreio de Voo Específico (AviationStack + OpenSky)
+- **Data:** 26/06/2026
+- **Ação:** A página de **Rastreio em Tempo Real** (`/tracker`) foi completamente reformulada com uma arquitetura de dados dupla:
+  - **Layout Lado a Lado:** A página foi reestruturada em um grid de duas colunas: esquerda com a caixa de pesquisa e o cartão de informações do voo, e direita com o mapa de radar ao vivo dedicado ao tracker.
+  - **Bug Crítico de Rota:** A busca de voos no tracker retornava erro porque a UI enviava o código ICAO do avião (ex: `AZU4712`, 3 letras + número) mas a AviationStack esperava o código IATA (ex: `AD4712`, 2 letras). Corrigido no `aviationstack_client.py` com um tradutor inteligente via regex: se o código começa com 3 letras, o parâmetro muda de `flight_iata` para `flight_icao` automaticamente.
+  - **Chave de API da AviationStack:** A chave `21d898e889b1ad358212b47b7e287898` foi adicionada ao `.env` e ao modelo `Settings` (`AVIATIONSTACK_API_KEY`) do projeto.
+  - **Cartão de Voo Responsivo:** O card de exibição de voo (companhia, status, aeroporto de origem/destino, horários previstos e atrasos) usava `clamp(2rem, 6vw, 3rem)` que escalava com a largura de tela total, estourando a coluna lateral de 320px. Os valores foram substituídos por tamanhos fixos adequados à coluna (`1.8rem` para códigos IATA, `0.9rem` para horários).
+  - **Remoção de Conflito de Classe CSS:** O container da página de rastreio usava a classe `dashboard-container` que herdava `flex-direction: column`, empilhando coluna esquerda e mapa verticalmente. A classe foi removida, permitindo o `flex-direction: row` funcionar corretamente.
+
+---
+
+## 📍 Onde Paramos / Estado Atual do Sistema
+
+### ✅ Funcional e Estável
+- **Busca de Voos:** Streaming em tempo real via SSE (Google Flights + Kayak).
+- **Radar ao Vivo (Dashboard):** Atualização a cada 20s com cache e fallback por rate limit.
+- **Rastreio de Voo Específico:** Cartão com aeroporto de origem/destino e horários via AviationStack + mapa do avião via OpenSky.
+- **Alertas de Preço:** Criação, listagem e deleção via modal premium.
+- **Autenticação:** OAuth2 completo com Google e Facebook + JWT.
+- **Deploy:** Docker Compose de produção com volumes mapeados para arquivos estáticos.
+
+### ⚠️ Atenção / Limitações Conhecidas
+- **OpenSky Rate Limit:** A API anônima permite ~400 req/dia. O cache de 15s e o intervalo de 20s reduzem drasticamente o consumo, mas em caso de uso intenso (muitas abas abertas), pode ocorrer bloqueio temporário.
+- **AviationStack Plano Gratuito:** Suporte limitado a voos ativos. Voos já pousados ou futuros podem não retornar dados de telemetria GPS.
+
+### 🔜 Próximos Passos Sugeridos
+- Implementar autenticação na OpenSky Network (aumenta o limite para 4.000 req/dia e diminui a resolução para 5s).
+- Adicionar página de Checkout com integração de afiliados consistente.
+- Polir a seção de Favoritos e persistência de destinos salvos no PostgreSQL.

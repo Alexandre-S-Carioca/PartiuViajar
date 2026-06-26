@@ -23,7 +23,7 @@ from infrastructure.collectors.tap_collector import TapCollector
 from factories.http_client_factory import HttpClientFactory
 from events.handlers import register_handlers
 from jobs.scheduler import setup_scheduler
-from api.routes import flights, health, auth, airports, price_history, alerts, hotels, travel, map, history, favorites, flights_api
+from api.routes import flights, health, auth, airports, price_history, alerts, hotels, travel, map, history, favorites, flights_api, restaurants
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
 from core.security import limiter
@@ -99,6 +99,7 @@ app.include_router(map.router)
 app.include_router(history.router)
 app.include_router(favorites.router)
 app.include_router(flights_api.router)
+app.include_router(restaurants.router)
 
 import os
 static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static"))

@@ -147,6 +147,7 @@ export function renderDashboard() {
         if (mapEl) {
             if (mapEl._leaflet_id) { mapEl._leaflet_id = null; }
             if (window._dashboardMap) { window._dashboardMap.remove(); }
+            if (window._dashboardFlightsInterval) { clearInterval(window._dashboardFlightsInterval); }
             
             const savedLat = localStorage.getItem('user_lat');
             const savedLon = localStorage.getItem('user_lon');
@@ -174,7 +175,58 @@ export function renderDashboard() {
             let poiLayer = L.layerGroup().addTo(map);
             let fetchTimeout = null;
             
+            // Flights Layer
+            let flightsLayer = L.layerGroup().addTo(map);
+            let activeFlights = {}; 
+
+            function updateFlights() {
+                if (map.getZoom() < 3) {
+                    flightsLayer.clearLayers();
+                    activeFlights = {};
+                    return;
+                }
+                const b = map.getBounds();
+                fetch(`/api/v1/flights/live-radar?lamin=${b.getSouth()}&lamax=${b.getNorth()}&lomin=${b.getWest()}&lomax=${b.getEast()}`)
+                    .then(r => r.json())
+                    .then(flights => {
+                        const newActive = {};
+                        if (!Array.isArray(flights)) return;
+                        flights.forEach(f => {
+                            newActive[f.icao24] = true;
+                            if (activeFlights[f.icao24]) {
+                                const marker = activeFlights[f.icao24];
+                                marker.setLatLng([f.latitude, f.longitude]);
+                                const iconEl = marker.getElement();
+                                if (iconEl) {
+                                    const div = iconEl.querySelector('div');
+                                    if (div) div.style.transform = `rotate(${f.true_track}deg)`;
+                                }
+                                marker.getPopup().setContent(`<strong>Voo: ${f.callsign}</strong><br>País: ${f.origin_country}<br>Altitude: ${Math.round(f.altitude)}m<br>Vel: ${Math.round(f.velocity * 3.6)} km/h`);
+                            } else {
+                                const divIcon = L.divIcon({
+                                    html: `<div style="font-size: 24px; text-shadow: 0 0 5px #00e5ff; transform: rotate(${f.true_track}deg); transition: transform 1s, left 1s, top 1s;">✈️</div>`,
+                                    className: '',
+                                    iconSize: [24, 24], iconAnchor: [12, 12]
+                                });
+                                const marker = L.marker([f.latitude, f.longitude], {icon: divIcon})
+                                    .bindPopup(`<strong>Voo: ${f.callsign}</strong><br>País: ${f.origin_country}<br>Altitude: ${Math.round(f.altitude)}m<br>Vel: ${Math.round(f.velocity * 3.6)} km/h`)
+                                    .addTo(flightsLayer);
+                                activeFlights[f.icao24] = marker;
+                            }
+                        });
+                        Object.keys(activeFlights).forEach(id => {
+                            if (!newActive[id]) {
+                                flightsLayer.removeLayer(activeFlights[id]);
+                                delete activeFlights[id];
+                            }
+                        });
+                    }).catch(e => console.error("Error fetching flights:", e));
+            }
+            window._dashboardFlightsInterval = setInterval(updateFlights, 20000);
+            
             map.on('moveend', () => {
+                updateFlights();
+                
                 if(map.getZoom() < 12) {
                     poiLayer.clearLayers();
                     return; 

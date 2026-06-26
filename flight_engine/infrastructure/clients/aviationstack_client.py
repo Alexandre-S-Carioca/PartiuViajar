@@ -30,9 +30,13 @@ class AviationstackClient:
 
         # Endpoint requires HTTP due to free tier restrictions
         url = f"{self.base_url}/flights"
+        # Se começa com 3 letras (ex: AZU4712), é ICAO. Se 2 letras (ex: AD4712), é IATA.
+        import re
+        is_icao = bool(re.match(r'^[a-zA-Z]{3}\d+', flight_iata))
+        
         params = {
             "access_key": self.api_key,
-            "flight_iata": flight_iata,
+            "flight_icao" if is_icao else "flight_iata": flight_iata,
             "limit": 1
         }
 

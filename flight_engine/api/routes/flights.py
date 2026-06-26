@@ -78,3 +78,14 @@ async def get_live_flight_status(request: Request, flight_iata: str):
         raise HTTPException(status_code=404, detail="Flight not found or live status unavailable")
     return FlightStatusDTO.from_api_response(flight_data)
 
+from infrastructure.collectors.opensky_collector import OpenSkyCollector
+opensky_collector = OpenSkyCollector()
+
+@router.get("/live-radar")
+async def get_live_radar(lamin: float, lamax: float, lomin: float, lomax: float):
+    """
+    Returns live flights in a bounding box using OpenSky Network.
+    """
+    return await opensky_collector.fetch_live_flights(lamin, lamax, lomin, lomax)
+
+

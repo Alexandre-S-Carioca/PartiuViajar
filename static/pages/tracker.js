@@ -1,32 +1,48 @@
 export function renderTracker() {
     const container = document.createElement('div');
-    container.className = 'dashboard-container tracker-page';
+    container.className = 'tracker-page';
 
     container.innerHTML = `
         <h1 class="page-title">Rastreio em Tempo Real</h1>
         <p class="subtitle" style="margin-bottom: 30px; color: var(--text-secondary);">Acompanhe o status do seu voo diretamente no mapa global.</p>
 
-        <div class="tracker-search-box" style="margin-bottom: 40px; background: var(--bg-secondary); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; gap: 10px; max-width: 500px;">
-            <input type="text" id="flight-iata-input" placeholder="Ex: 3U9619" style="flex: 1; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 1rem;" autocomplete="off">
-            <button id="btn-track-flight" class="btn-magic" style="padding: 12px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">Localizar</button>
-        </div>
+        <div style="display: flex; flex-direction: row; gap: 30px; align-items: stretch; margin-top: 30px; width: 100%;">
+            <!-- Coluna Esquerda -->
+            <div style="width: 320px; min-width: 320px; flex-shrink: 0; display: flex; flex-direction: column; gap: 15px;">
+                <div style="background: var(--bg-secondary); padding: 20px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; gap: 12px;">
+                    <input type="text" id="flight-iata-input" placeholder="Ex: AZU4712" style="width: 100%; box-sizing: border-box; padding: 12px 15px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-main); color: var(--text-primary); font-size: 1rem;" autocomplete="off">
+                    <button id="btn-track-flight" class="btn-magic" style="width: 100%; padding: 12px 0; border-radius: 8px; font-weight: 600; cursor: pointer;">Localizar</button>
+                </div>
 
-        <div id="tracker-result-container" style="min-height: 300px;">
-            <!-- Estado Vazio -->
-            <div id="tracker-empty-state" style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; text-align: center; color: var(--text-secondary); opacity: 0.6;">
-                <div style="font-size: 4rem; margin-bottom: 15px;">📡</div>
-                <p>Digite o código do voo acima para iniciar o rastreamento.</p>
+                <div id="tracker-result-container" style="flex: 1; background: var(--bg-secondary); border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.05); display: flex; flex-direction: column; min-height: 300px;">
+                    <!-- Estado Vazio -->
+                    <div id="tracker-empty-state" style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px; text-align: center; color: var(--text-secondary); opacity: 0.6;">
+                        <div style="font-size: 3.5rem; margin-bottom: 12px;">📡</div>
+                        <p>Digite o código do voo acima para iniciar o rastreamento.</p>
+                    </div>
+
+                    <!-- Loader (escondido) -->
+                    <div id="tracker-loader" class="hidden" style="display: none; flex: 1; flex-direction: column; align-items: center; justify-content: center; padding: 30px 20px;">
+                        <div class="spinner" style="margin-bottom: 15px;"></div>
+                        <p style="color: var(--text-secondary);">Buscando sinal do transponder...</p>
+                    </div>
+
+                    <!-- Cartão do Voo (escondido) -->
+                    <div id="tracker-card" class="tracker-premium-card hidden" style="display: none; border: none; background: transparent; padding: 20px;">
+                        <!-- Preenchido via JS -->
+                    </div>
+                </div>
             </div>
 
-            <!-- Loader (escondido) -->
-            <div id="tracker-loader" class="hidden" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 50px;">
-                <div class="spinner" style="margin-bottom: 15px;"></div>
-                <p style="color: var(--text-secondary);">Buscando sinal do transponder...</p>
-            </div>
-
-            <!-- Cartão do Voo (escondido) -->
-            <div id="tracker-card" class="tracker-premium-card hidden" style="display: none;">
-                <!-- Preenchido via JS -->
+            <!-- Coluna Direita (Mapa) -->
+            <div class="dashboard-panel" style="flex: 1; margin-top: 0; display: flex; flex-direction: column; min-width: 0;">
+                <div class="panel-header">
+                    <h3>Radar Global Ao Vivo</h3>
+                    <button onclick="window.toggleTrackerMapFullscreen()" title="Tela Cheia" style="padding: 4px 8px; border-radius: 6px; background: var(--bg-secondary); color: var(--text-primary); border: 1px solid var(--border-color); cursor: pointer; font-size: 1rem;">⛶</button>
+                </div>
+                <div style="padding: 0; flex: 1; display: flex; min-width: 0;">
+                    <div id="tracker-live-map" style="width: 100%; min-height: 480px; border-bottom-left-radius: 12px; border-bottom-right-radius: 12px;"></div>
+                </div>
             </div>
         </div>
     `;
@@ -39,6 +55,92 @@ export function renderTracker() {
         inputIata.addEventListener('keypress', (e) => {
             if(e.key === 'Enter') performTracking(inputIata.value);
         });
+
+        const mapEl = container.querySelector('#tracker-live-map');
+        if (mapEl) {
+            if (mapEl._leaflet_id) { mapEl._leaflet_id = null; }
+            if (window._trackerMap) { window._trackerMap.remove(); }
+            if (window._trackerFlightsInterval) { clearInterval(window._trackerFlightsInterval); }
+            
+            const savedLat = localStorage.getItem('user_lat');
+            const savedLon = localStorage.getItem('user_lon');
+            let map;
+            if (savedLat && savedLon) {
+                map = L.map(mapEl).setView([parseFloat(savedLat), parseFloat(savedLon)], 6);
+            } else {
+                map = L.map(mapEl).setView([-14.235, -51.925], 4);
+            }
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+            
+            window._trackerMap = map;
+            
+            let flightsLayer = L.layerGroup().addTo(map);
+            let activeFlights = {}; 
+
+            function updateFlights() {
+                if (map.getZoom() < 3) {
+                    flightsLayer.clearLayers();
+                    activeFlights = {};
+                    return;
+                }
+                const b = map.getBounds();
+                fetch(`/api/v1/flights/live-radar?lamin=${b.getSouth()}&lamax=${b.getNorth()}&lomin=${b.getWest()}&lomax=${b.getEast()}`)
+                    .then(r => r.json())
+                    .then(flights => {
+                        const newActive = {};
+                        if (!Array.isArray(flights)) return;
+                        flights.forEach(f => {
+                            newActive[f.icao24] = true;
+                            if (activeFlights[f.icao24]) {
+                                const marker = activeFlights[f.icao24];
+                                marker.setLatLng([f.latitude, f.longitude]);
+                                const iconEl = marker.getElement();
+                                if (iconEl) {
+                                    const div = iconEl.querySelector('div');
+                                    if (div) div.style.transform = `rotate(${f.true_track}deg)`;
+                                }
+                                marker.getPopup().setContent(`<strong>Voo: ${f.callsign}</strong><br>País: ${f.origin_country}<br>Altitude: ${Math.round(f.altitude)}m<br>Vel: ${Math.round(f.velocity * 3.6)} km/h`);
+                            } else {
+                                const divIcon = L.divIcon({
+                                    html: `<div style="font-size: 24px; text-shadow: 0 0 5px #00e5ff; transform: rotate(${f.true_track}deg); transition: transform 1s, left 1s, top 1s;">✈️</div>`,
+                                    className: '',
+                                    iconSize: [24, 24], iconAnchor: [12, 12]
+                                });
+                                const marker = L.marker([f.latitude, f.longitude], {icon: divIcon})
+                                    .bindPopup(`<strong>Voo: ${f.callsign}</strong><br>País: ${f.origin_country}<br>Altitude: ${Math.round(f.altitude)}m<br>Vel: ${Math.round(f.velocity * 3.6)} km/h`)
+                                    .addTo(flightsLayer);
+                                activeFlights[f.icao24] = marker;
+                            }
+                        });
+                        Object.keys(activeFlights).forEach(id => {
+                            if (!newActive[id]) {
+                                flightsLayer.removeLayer(activeFlights[id]);
+                                delete activeFlights[id];
+                            }
+                        });
+                    }).catch(e => console.error("Error fetching flights:", e));
+            }
+            window._trackerFlightsInterval = setInterval(updateFlights, 20000);
+            
+            map.on('moveend', () => {
+                updateFlights();
+            });
+            setTimeout(() => { map.invalidateSize(); updateFlights(); }, 300);
+            
+            window.toggleTrackerMapFullscreen = function() {
+                if (!document.fullscreenElement) {
+                    mapEl.requestFullscreen().catch(err => {
+                        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+                    });
+                } else {
+                    document.exitFullscreen();
+                }
+            };
+        }
+
     }, 100);
 
     return container;

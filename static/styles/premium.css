@@ -197,7 +197,7 @@
     color: var(--text-secondary);
 }
 .flight-number {
-    font-size: clamp(1.5rem, 4vw, 2rem);
+    font-size: 1.5rem;
     font-weight: 700;
     letter-spacing: -0.5px;
     background: linear-gradient(90deg, #60A5FA, #A78BFA);
@@ -238,23 +238,24 @@
 .airport-block.text-right { text-align: right; }
 
 .iata-code {
-    font-size: clamp(2rem, 6vw, 3rem);
+    font-size: 1.8rem;
     font-weight: 800;
     line-height: 1;
     margin-bottom: 5px;
     color: var(--text-primary);
 }
 .airport-name {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
-    margin-bottom: 10px;
-    max-width: 150px;
+    margin-bottom: 6px;
+    max-width: 120px;
+    word-wrap: break-word;
 }
 .airport-block.text-right .airport-name {
     margin-left: auto;
 }
 .time-sched {
-    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
+    font-size: 0.9rem;
     font-weight: 600;
 }
 .time-actual {

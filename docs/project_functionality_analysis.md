@@ -109,3 +109,41 @@ Hoje a arquitetura do projeto foi significativamente expandida para suportar Aut
 * **Dashboard Responsivo e Tematizado:** A plataforma conta com um painel (*Dashboard*) moderno adaptado para dispositivos móveis (`flex-direction: column` inteligente). Um seletor de Modo Claro / Modo Escuro customiza variáveis CSS globais (ex: `--bg-main`, `--shadow-md`) garantindo alto contraste e elegância em qualquer tela.
 * **Busca Inteligente Integrada:** A barra de buscas dentro do painel adapta dinamicamente seus rótulos entre "Voos" (Ida, Volta, Passageiros) e "Hotéis" (Check-in, Check-out, Hóspedes). Além disso, controles de viagem ("Só Ida" ou "Ida e Volta") ocultam ou revelam campos nativamente, melhorando a experiência do usuário.
 * **Sincronização de Histórico (LocalStorage):** Toda pesquisa realizada na Landing Page principal ou dentro do Dashboard é interceptada e gravada no cache local do dispositivo do usuário (`partiuviajar_history`). Esse histórico persiste e alimenta o painel com estatísticas de "Pesquisas Realizadas" e uma lista das "Últimas Buscas" recentes, substituindo os antigos *Empty States* estáticos por interatividade real. Recomendações de turismo no rodapé agem como hiperlinks diretos para cotações no Google Travel.
+
+---
+
+## 🛰️ Módulo de Telemetria de Voos em Tempo Real (OpenSky Network)
+
+### 10. Radar ao Vivo no Dashboard e na Página de Rastreio
+
+O sistema integra a **OpenSky Network** (API pública REST) como fonte de telemetria de voos ao vivo, complementando a AviationStack para rastreio de voos específicos.
+
+```mermaid
+graph TD
+    MapaFrontend[Frontend: Leaflet Map] -->|GET /api/v1/flights/live-radar?bbox| API[Backend: FastAPI]
+    API -->|Cache hit 15s?| Cache[(In-Memory Cache)]
+    Cache -->|Sim: retorna sem chamar API| MapaFrontend
+    API -->|Não: chama OpenSky| OpenSky[OpenSky Network API]
+    OpenSky -->|states/all + bounding box| API
+    API -->|Salva cache e retorna| MapaFrontend
+
+    TrackerUI[Tracker: Busca por código] -->|GET /api/v1/flights/live/AZU4712| API
+    API -->|Traduz ICAO→IATA se necessário| AviationStack[AviationStack API]
+    AviationStack -->|Dados de aeroporto, horários, status| TrackerUI
+```
+
+**Componentes envolvidos:**
+
+| Arquivo | Responsabilidade |
+|---|---|
+| `infrastructure/collectors/opensky_collector.py` | Consulta a OpenSky, normaliza vetores de estado, aplica cache de 15s |
+| `api/routes/flights.py` | Expõe `GET /live-radar` e `GET /live/{flight_iata}` |
+| `infrastructure/clients/aviationstack_client.py` | Busca dados de aeroporto/horário; detecta e traduz ICAO→IATA automaticamente |
+| `static/pages/dashboard.js` | Renderiza camada de aviões no mapa com atualização a cada 20s |
+| `static/pages/tracker.js` | Página de rastreio lado a lado: formulário + cartão de voo à esquerda, mapa ao vivo à direita |
+
+**Estratégia anti-rate-limit:**
+- Cache in-memory de 15s no servidor agrupa requisições frequentes de múltiplos clientes.
+- Em caso de `429`, o sistema retorna o último cache válido em vez de erro.
+- Frontend atualiza a cada 20s (metade da frequência original).
+

@@ -5,10 +5,12 @@ import { renderHistory } from './pages/history.js';
 import { renderDestinations } from './pages/destinations.js';
 import { renderPreferences } from './pages/preferences.js';
 import { renderTracker } from './pages/tracker.js';
+import { renderRestaurants } from './pages/restaurants.js';
 
 const menuItems = [
     { id: 'dashboard', icon: '🏠', label: 'Meu Painel', path: '#/dashboard' },
     { id: 'tracker', icon: '🛰️', label: 'Rastreio de Voos', path: '#/tracker' },
+    { id: 'restaurants', icon: '🍽️', label: 'Restaurantes', path: '#/restaurants' },
     { id: 'favorites', icon: '❤️', label: 'Favoritos', path: '#/favorites' },
     { id: 'alerts', icon: '🔔', label: 'Alertas de preço', path: '#/alerts' },
     { id: 'history', icon: '🕒', label: 'Histórico de buscas', path: '#/history' },
@@ -593,6 +595,7 @@ function setupThemeToggle() {
 const routes = {
     '#/dashboard': renderDashboard,
     '#/tracker': renderTracker,
+    '#/restaurants': renderRestaurants,
     '#/favorites': renderFavorites,
     '#/alerts': renderAlerts,
     '#/history': renderHistory,
