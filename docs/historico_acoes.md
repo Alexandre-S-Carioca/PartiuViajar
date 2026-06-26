@@ -73,9 +73,16 @@ Este documento mantém o registro das últimas manutenções, correções de bug
   - **Barra de Busca Inteligente no Mapa:** Para explorar lugares globais, foi inserida uma barra de texto acima do mapa. O usuário escreve uma cidade (Ex: Tóquio), a requisição bate na API do Nominatim, encontra as coordenadas e centraliza a tela ali em segundos.
   - **Modo de Expansão (Modal Suspenso):** Adição de um botão "⛶" para ampliar o mapa. Ao invés de usar o recurso bruto de tela cheia do navegador, o mapa se torna um modal suspenso, ocupando 85% da tela com um sombreamento de fundo (estilo cinema). Também foi adicionado um botão flutuante inteligente "✖" para sair do modo de expansão de forma intuitiva, sem sobrescrever ou vazar eventos de clique para o Leaflet.
 
+## 16. Resolução Crítica de Bugs de Deploy (Produção)
+- **Data:** 25/06/2026
+- **Problema 1 (Erro 500 / Tela Branca):** Após o deploy na Oracle Cloud, o site retornou "Internal Server Error". A causa raiz foi identificada no `Dockerfile`: a pasta `static` estava sendo copiada para o diretório incorreto (`/app/flight_engine/static`), enquanto o código do FastAPI (`api/main.py`) resolvia o caminho absoluto para `/app/static`. Isso fazia o FastAPI tentar ler o `index.html` em uma pasta recém-criada vazia, gerando um `FileNotFoundError` que derrubava a requisição.
+- **Ação 1:** O `Dockerfile` foi corrigido para mapear exatamente a pasta usando `COPY static /app/static`, equalizando os caminhos.
+- **Problema 2 (Arquivos Estáticos não atualizando):** Mesmo com o build, as alterações de CSS/JS (como o mapa suspenso) não refletiam no navegador, devido ao cache de imagem do Docker e falta de mapeamento direto.
+- **Ação 2:** Adicionada a instrução de volume `- ./static:/app/static` no serviço `api` dentro do `docker-compose.prod.yml`. Isso faz com que qualquer alteração nos arquivos estáticos seja espelhada imediatamente para o contêiner em execução, sem necessidade de rebuild, seguindo a Regra de Ouro definida no projeto.
+
 ---
 
-## 🚀 Onde Paramos / Próximos Passos
+## 📍 Onde Paramos / Próximos Passos
 - O "Buscador de Viagens" já superou o escopo de ser um simples agregador e evoluiu para uma central de planejamento visual extremamente útil (Dashboard).
 - As rotinas front-end estão altamente integradas e independentes do backend para certas visualizações geoespaciais (Leaflet, Overpass API, Nominatim).
 - Os próximos passos ideais podem envolver aprimorar o módulo de Rastreio de Voos e garantir que a página de Checkout e Reservas (se for haver uma local) siga os links de afiliado com consistência total.

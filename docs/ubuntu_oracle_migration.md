@@ -91,12 +91,17 @@ Salve e saia do Nano (`Ctrl+O`, `Enter`, `Ctrl+X`).
 
 ## Passo 5: Rodar a Aplicação
 
-Com o Docker, o processo de "Build" e "Run" é feito em um único comando:
+Com o Docker, o processo de "Build" e "Run" é feito em um único comando. **Atenção**: Como estamos em produção, você **DEVE** utilizar o arquivo `docker-compose.prod.yml`:
 
 ```bash
 # Dentro da pasta PartiuViajar
-docker-compose up --build -d
+docker-compose -f docker-compose.prod.yml up --build -d
 ```
+
+> [!WARNING]
+> **Evitando Erro 500 e Cache de Frontend em Produção**
+> Nunca utilize o comando padrão (`docker-compose up`) em produção, pois ele tentará ligar o banco de dados interno na porta `5432` conflitando com o PostgreSQL nativo do servidor Oracle e quebrando a inicialização da API (gerando Erro 502 Bad Gateway no Nginx).
+> Além disso, o arquivo `docker-compose.prod.yml` já contém o volume `- ./static:/app/static`. Isso garante que qualquer arquivo CSS, JS ou HTML atualizado via `git pull` será injetado imediatamente no servidor web sem precisar refazer o build da imagem!
 
 A flag `-d` garante que os serviços continuem rodando em segundo plano (background) mesmo que você feche o terminal do Windows.
 
