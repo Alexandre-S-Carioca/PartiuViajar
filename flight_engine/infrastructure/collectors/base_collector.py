@@ -23,7 +23,7 @@ class BaseCollector(abc.ABC):
 
     @abc.abstractmethod
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> List[Flight]:
         pass
 

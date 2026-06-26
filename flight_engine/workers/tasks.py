@@ -16,14 +16,19 @@ from infrastructure.collectors.google_flights_collector import GoogleFlightsColl
 from infrastructure.collectors.kayak_collector import KayakCollector
 
 try:
-    registry.get("GoogleFlights(Real)")
-except KeyError:
     registry.register(GoogleFlightsCollector())
+    
+    from infrastructure.collectors.google_flights_scrapestack_collector import GoogleFlightsScrapestackCollector
+    registry.register(GoogleFlightsScrapestackCollector())
 
-try:
-    registry.get("Kayak(Real)")
-except KeyError:
+    from infrastructure.collectors.gol_scrapestack_collector import GolScrapestackCollector
+    registry.register(GolScrapestackCollector())
+
     registry.register(KayakCollector())
+except Exception as e:
+    # Handle cases where collectors might already be registered or missing
+    logger = logging.getLogger(__name__)
+    logger.warning(f"Collector registration issue: {e}")
 
 logger = logging.getLogger(__name__)
 

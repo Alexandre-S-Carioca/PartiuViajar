@@ -38,7 +38,7 @@ class KayakCollector(BaseCollector):
         super().__init__(name="Kayak(Real)")
 
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> list[Flight]:
         date_str = departure_date.strftime("%Y-%m-%d")
         # URL do Kayak para busca Oneway, ordenado por preço

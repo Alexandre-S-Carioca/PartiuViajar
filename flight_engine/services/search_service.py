@@ -71,6 +71,22 @@ class SearchService:
                      # (Mesma desserialização acima, omitida para concisão ou movida para método)
                      pass
 
+            # Descobre país de destino para pegar a moeda
+            from services.airport_service import airport_service
+            from infrastructure.clients.geo_client import geo_api_client
+            
+            dest_country = None
+            for ap in airport_service.airports:
+                if ap["code"] == req.destination:
+                    dest_country = ap["country"]
+                    break
+                    
+            target_currency = "BRL"
+            if dest_country:
+                country_info = await geo_api_client.get_country_info(dest_country)
+                if country_info and "currencies" in country_info and len(country_info["currencies"]) > 0:
+                    target_currency = country_info["currencies"][0]["code"]
+
             # Realiza a busca paralela
             dep_date = datetime.strptime(req.departure_date, "%Y-%m-%d")
             all_flights: List[Flight] = []
@@ -80,7 +96,7 @@ class SearchService:
                 for collector in registry.get_all():
                     tasks.append(
                         tg.create_task(
-                            collector.fetch_flights(req.origin, req.destination, dep_date, req.adults)
+                            collector.fetch_flights(req.origin, req.destination, dep_date, req.adults, currency=target_currency)
                         )
                     )
 

@@ -56,10 +56,16 @@ async def lifespan(app: FastAPI):
     # registry.register(CopaCollector())
     # registry.register(AviancaCollector())
     # registry.register(TapCollector())
+
     from infrastructure.collectors.google_flights_collector import GoogleFlightsCollector
     from infrastructure.collectors.kayak_collector import KayakCollector
+    from infrastructure.collectors.gol_scrapestack_collector import GolScrapestackCollector
+    
     registry.register(GoogleFlightsCollector())
+    from infrastructure.collectors.google_flights_scrapestack_collector import GoogleFlightsScrapestackCollector
+    registry.register(GoogleFlightsScrapestackCollector())
     registry.register(KayakCollector())
+    registry.register(GolScrapestackCollector())
 
     # Register Events
     register_handlers()
@@ -95,9 +101,10 @@ app.include_router(favorites.router)
 app.include_router(flights_api.router)
 
 import os
-os.makedirs("static", exist_ok=True)
-app.mount("/static", StaticFiles(directory="static"), name="static")
+static_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../static"))
+os.makedirs(static_dir, exist_ok=True)
+app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
 @app.get("/")
 async def serve_index():
-    return FileResponse("static/index.html", headers={"Cache-Control": "no-cache, no-store, must-revalidate"})
+    return FileResponse(os.path.join(static_dir, "index.html"), headers={"Cache-Control": "no-cache, no-store, must-revalidate"})

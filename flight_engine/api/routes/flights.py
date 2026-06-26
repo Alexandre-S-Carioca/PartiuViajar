@@ -62,3 +62,19 @@ async def stream_flights(
     # Needs to import search_service here if not imported at top
     from services.search_service import search_service
     return StreamingResponse(search_service.stream_search(req), media_type="text/event-stream")
+
+from infrastructure.clients.aviationstack_client import aviationstack_client
+from application.dto.flight_status_dto import FlightStatusDTO
+
+@router.get("/live/{flight_iata}", response_model=FlightStatusDTO)
+@limiter.limit("5/minute")
+async def get_live_flight_status(request: Request, flight_iata: str):
+    """
+    Returns the real-time status of a flight using its IATA code.
+    Example: 3U9619
+    """
+    flight_data = await aviationstack_client.get_live_flight_status(flight_iata)
+    if not flight_data:
+        raise HTTPException(status_code=404, detail="Flight not found or live status unavailable")
+    return FlightStatusDTO.from_api_response(flight_data)
+

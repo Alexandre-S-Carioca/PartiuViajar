@@ -6101,46 +6101,74 @@ class AirportService:
         matches.sort(key=lambda x: (-x[0], x[1]["city"]))
         return [item[1] for item in matches[:limit]]
 
-    def search_cities(self, query: str, limit: int = 8) -> List[Dict[str, str]]:
-        """Search for unique cities worldwide using the airports dataset."""
+    async def search_cities(self, query: str, limit: int = 8) -> List[Dict[str, str]]:
+        """Search for unique cities worldwide intercepting with Geo API."""
         if not query:
-            # Return some top cities by default
             return []
             
         normalized_query = normalize_text(query.strip())
         matches = []
         seen_cities = set()
         
-        for ap in self.airports:
-            city_country = f"{ap['city'].lower()}-{ap['country'].lower()}"
-            if city_country in seen_cities:
-                continue
+        # 1. Tentar bater na Geo API primeiro
+        from infrastructure.clients.geo_client import geo_api_client
+        geo_cities = await geo_api_client.search_cities(query)
+        
+        if geo_cities:
+            for geo_city in geo_cities:
+                city_name = normalize_text(geo_city.get("name", ""))
+                for ap in self.airports:
+                    if normalize_text(ap["city"]) == city_name:
+                        city_country = f"{ap['city'].lower()}-{ap['country'].lower()}"
+                        if city_country not in seen_cities:
+                            seen_cities.add(city_country)
+                            matches.append({
+                                "code": ap["code"],
+                                "city": ap["city"],
+                                "country": ap["country"],
+                                "name": "City",
+                                "display": f"{ap['city']}, {ap['country']}"
+                            })
+                            if len(matches) >= limit:
+                                return matches
+
+        # 2. Fallback: Se a Geo API não encontrou ou falhou, usar busca local antiga
+        if not matches:
+            for ap in self.airports:
+                city_country = f"{ap['city'].lower()}-{ap['country'].lower()}"
+                if city_country in seen_cities:
+                    continue
+                    
+                norm_city = normalize_text(ap['city'])
+                norm_country = normalize_text(ap['country'])
                 
-            norm_city = normalize_text(ap['city'])
-            norm_country = normalize_text(ap['country'])
-            
-            score = 0
-            if norm_city == normalized_query:
-                score = 100
-            elif norm_city.startswith(normalized_query):
-                score = 80
-            elif normalized_query in norm_city:
-                score = 60
-            elif norm_country == normalized_query or norm_country.startswith(normalized_query):
-                score = 40
-            
-            if score > 0:
-                seen_cities.add(city_country)
-                matches.append((score, {
-                    "code": ap["code"],
-                    "city": ap["city"],
-                    "country": ap["country"],
-                    "name": "City",
-                    "display": f"{ap['city']}, {ap['country']}"
-                }))
+                score = 0
+                if norm_city == normalized_query:
+                    score = 100
+                elif norm_city.startswith(normalized_query):
+                    score = 80
+                elif normalized_query in norm_city:
+                    score = 60
+                elif norm_country == normalized_query or norm_country.startswith(normalized_query):
+                    score = 40
                 
-        matches.sort(key=lambda x: (-x[0], x[1]["city"]))
-        return [item[1] for item in matches[:limit]]
+                if score > 0:
+                    seen_cities.add(city_country)
+                    matches.append((score, {
+                        "code": ap["code"],
+                        "city": ap["city"],
+                        "country": ap["country"],
+                        "name": "City",
+                        "display": f"{ap['city']}, {ap['country']}"
+                    }))
+                    
+            # Ordena pelo score no fallback
+            matches_scored = [m for m in matches if isinstance(m, tuple)]
+            matches_scored.sort(key=lambda x: (-x[0], x[1]["city"]))
+            # Mescla eventuais matches puros com o fallback
+            return [m[1] for m in matches_scored][:limit]
+            
+        return matches[:limit]
 
 
 airport_service = AirportService()

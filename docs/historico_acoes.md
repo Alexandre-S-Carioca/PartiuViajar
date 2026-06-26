@@ -51,9 +51,30 @@ Este documento mantém o registro das últimas manutenções, correções de bug
 - **Problema:** O painel (Dashboard) estava pré-preenchido com números falsos e listas fictícias (buscas, alertas, destinos), o que causava estranheza em novos usuários cadastrados. Além disso, as recomendações no rodapé eram estáticas e não levavam a lugar algum.
 - **Ação:** No arquivo `dashboard.js`, zeramos os números estatísticos do placar principal (Pesquisas, Favoritos, Alertas, Destinos). Para as colunas de "Últimas buscas", "Alertas" e "Destinos salvos", implementamos mensagens e ícones amigáveis de estado vazio (*empty states*). Também transformamos as quatro fotos de recomendação no rodapé em links embutidos (`<a>`) que redirecionam os usuários para o Google Travel (com o termo de busca pré-preenchido para aquele destino), proporcionando interatividade imediata.
 
+### 11. Sincronização de Histórico da Landing Page com o Dashboard
+- **Problema:** Apenas a barra de buscas interna do Dashboard estava salvando o histórico no cache do navegador. Se o usuário fizesse uma pesquisa a partir da tela principal (Landing Page com o mapa), a busca não ficava registrada, e o painel continuava exibindo que o histórico estava vazio.
+- **Ação:** Injetamos a mesma rotina de salvamento (`localStorage`) no evento de envio do formulário de buscas dentro de `flight_engine/static/app.js`. Além disso, incrementamos a versão do script no arquivo HTML (`v=7`) para forçar os navegadores a limparem o cache. Com isso, toda busca feita em qualquer parte do site agora alimenta o painel de bordo perfeitamente.
+
+### 12. Mapa Interativo com Leaflet e OpenStreetMap
+- **Ação:** O frontend foi modificado (`app.js` e `index.html`) para acomodar um mapa interativo ao lado dos resultados de hotéis e pacotes unificados. O layout foi adaptado para "Grid" de forma que o mapa fique com posição fixa (sticky) ao longo da rolagem da lista de resultados. Foi utilizada a biblioteca de código aberto `Leaflet.js`.
+
+### 13. Geolocalização Real de Hotéis via Nominatim
+- **Problema:** O scraper do Booking gerava hotéis sem latitude/longitude ou espalhados em coordenadas globais imprecisas.
+- **Ação:** No backend (`accommodation_service.py`), sempre que o scraper de hotéis atua, é feita uma chamada em tempo real à API pública do **Nominatim (OpenStreetMap)** para encontrar a latitude e longitude exatas da cidade pesquisada. Os hotéis recebem uma sutil variação aleatória de até 2km dessa coordenada principal, fazendo com que os "pins" no mapa surjam realistas ao longo do mapa urbano/litoral.
+
+### 14. Refinamentos da UI: Links de Afiliados, Logo e Menus
+- **Ação:** Dentro dos "pins" (balões popup) do Leaflet no mapa, foi injetado um botão com o link oficial de afiliado do Booking, passando os parâmetros dinâmicos de destino, check-in, check-out e adultos. O menu lateral sofreu otimizações: a aba "Destinos salvos" foi removida a pedido do usuário; e a logomarca no canto esquerdo da sidebar tornou-se clicável, operando um *reset* dos campos de busca e o fechar do modal, enviando o usuário de volta para o Dashboard.
+
+### 15. Dashboard: Geolocalização, POIs (Overpass API) e Busca Dinâmica no Mapa
+- **Ação:** O painel principal (Dashboard) recebeu um upgrade maciço no seu mapa interativo:
+  - **Localização em Tempo Real:** Adição de um botão no topo direito (📍) que aciona a API de geolocalização do navegador do usuário, com requisição de Alta Precisão (`enableHighAccuracy`). O mapa automaticamente foca onde o usuário está e injeta um marcador local.
+  - **Radar de POIs (Pontos de Interesse):** Sem necessidade de sobrecarregar o backend com requisições, o próprio frontend (JavaScript) escuta o evento `moveend` do Leaflet e dispara uma busca para a **Overpass API** do OpenStreetMap, descobrindo 🏨 Hotéis, ✈️ Aeroportos e 🚌 Rodoviárias visíveis no enquadramento, preenchendo a região com ícones dinâmicos personalizados.
+  - **Afiliados nos POIs:** Ao clicar em um hotel no mapa, o pop-up dinâmico agora gera um botão "Reservar no Booking" com a ID de afiliado do usuário, pré-preenchendo o nome do hotel exato na busca do Booking. Aeroportos redirecionam com um botão azul para o Skyscanner.
+  - **Barra de Busca Inteligente no Mapa:** Para explorar lugares globais, foi inserida uma barra de texto acima do mapa. O usuário escreve uma cidade (Ex: Tóquio), a requisição bate na API do Nominatim, encontra as coordenadas e centraliza a tela ali em segundos.
+
 ---
 
-## 🎯 Onde Paramos / Próximos Passos
-- A infraestrutura de autenticação está totalmente operante.
-- O Layout responsivo do painel e os temas claro/escuro estão sólidos e limpos, apresentando dados consistentes (zerados) para novas contas.
-- As próximas atividades devem focar em finalizar a implementação do mapa iterativo no frontend e backend (baseado no `accommodation_service` e no arquivo `map.py` que estava sendo editado).
+## 🚀 Onde Paramos / Próximos Passos
+- O "Buscador de Viagens" já superou o escopo de ser um simples agregador e evoluiu para uma central de planejamento visual extremamente útil (Dashboard).
+- As rotinas front-end estão altamente integradas e independentes do backend para certas visualizações geoespaciais (Leaflet, Overpass API, Nominatim).
+- Os próximos passos ideais podem envolver aprimorar o módulo de Rastreio de Voos e garantir que a página de Checkout e Reservas (se for haver uma local) siga os links de afiliado com consistência total.

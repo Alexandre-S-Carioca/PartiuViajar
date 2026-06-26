@@ -34,10 +34,10 @@ class GoogleFlightsCollector(BaseCollector):
         super().__init__(name="GoogleFlights(Real)")
 
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> list[Flight]:
         date_str = departure_date.strftime("%Y-%m-%d")
-        url = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}%20oneway&hl=pt-BR&curr=BRL"
+        url = f"https://www.google.com/travel/flights?q=Flights%20to%20{destination}%20from%20{origin}%20on%20{date_str}%20oneway&hl=pt-BR&curr={currency}"
         
         flights = []
         async with async_playwright() as p:

@@ -14,7 +14,7 @@ class GolCollector(BaseCollector):
         self.base_url = "https://api.gol.mock/v1/flights"
 
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> List[Flight]:
         if not feature_flags.ENABLE_GOL:
             logger.info(f"[{self.name}] Collector disabled via feature flag.")

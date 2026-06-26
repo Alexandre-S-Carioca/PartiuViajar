@@ -14,7 +14,7 @@ class AzulCollector(BaseCollector):
         self.base_url = "https://api.azul.mock/search"
 
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> List[Flight]:
         if not feature_flags.ENABLE_AZUL:
             logger.info(f"[{self.name}] Collector disabled via feature flag.")

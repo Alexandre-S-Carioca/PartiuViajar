@@ -31,13 +31,13 @@ export function renderHistory() {
 
             list.innerHTML = data.map(item => `
                 <div class="history-item">
-                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">${item.type}</div>
+                    <div style="width: 40px; height: 40px; background: rgba(255,255,255,0.05); border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-right: 12px;">${item.type || '🔍'}</div>
                     <div style="flex: 1;">
-                        <div style="font-weight: 600;">${item.origin} → ${item.destination}</div>
+                        <div style="font-weight: 600;">${item.origin} ➔ ${item.destination}</div>
                         <div style="font-size: 0.8rem; color: var(--text-secondary);">${item.adults} Adulto(s)</div>
                     </div>
                     <div style="text-align: right; margin-right: 16px;">
-                        <div style="font-size: 0.85rem;">${item.date}</div>
+                        <div style="font-size: 0.85rem;">${item.date || item.departure_date || ''}</div>
                     </div>
                     <button class="btn-outline" style="padding: 6px 12px; font-size: 0.8rem;" onclick="window.showToast('Buscando novamente...', 'success')">Pesquisar novamente</button>
                 </div>

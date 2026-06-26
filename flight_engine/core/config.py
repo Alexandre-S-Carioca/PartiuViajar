@@ -2,6 +2,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    # Scrapestack
+    SCRAPESTACK_API_KEY: str | None = None
+    GEO_API_KEY: str | None = None
+
     # App Config
     APP_NAME: str = "Flight Search Engine"
     DEBUG: bool = False
@@ -42,6 +46,7 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_SECRET: str = ""
     FACEBOOK_CLIENT_ID: str = ""
     FACEBOOK_CLIENT_SECRET: str = ""
+    AVIATIONSTACK_API_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 

@@ -1,27 +1,32 @@
 import asyncio
 from playwright.async_api import async_playwright
-import os
 
 async def main():
-    url = "https://www.booking.com/index.pt-br.html?aid=2336990;label=pt-br-booking-desktop-UnJvgVTz0EG3IS*6pBwQNwS652804037930:pl:ta:p1:p2:ac:ap:neg:fi:tikwd-30240811714:lp9197540:li:dec:dm;ws=&gad_source=1&gad_campaignid=19856802198&gbraid=0AAAAAD_Ls1KL_-uW2WTA-Pd_Kiceh6YGC&gclid=Cj0KCQjwo_PRBhDNARIsAEcVALXkdcc6wNXwB_yhbLa3cnEK6hvU0X8jNvjzRTxd-GASHjKsnW5cIYYaArCMEALw_wcB&chal_t=1782431576328&force_referer=https%3A%2F%2Fwww.google.com%2F"
+    url = "https://www.skyscanner.com.br/"
     
-    screenshot_path = "C:/Users/alexa/.gemini/antigravity-ide/brain/9a046d1c-4604-4d0f-a099-a96a77b5ec8d/booking_test.png"
-    html_path = "C:/Users/alexa/.gemini/antigravity-ide/brain/9a046d1c-4604-4d0f-a099-a96a77b5ec8d/booking_test.html"
+    screenshot_path = "C:/Users/alexa/.gemini/antigravity-ide/brain/9a046d1c-4604-4d0f-a099-a96a77b5ec8d/skyscanner_test.png"
+    html_path = "C:/Users/alexa/.gemini/antigravity-ide/brain/9a046d1c-4604-4d0f-a099-a96a77b5ec8d/skyscanner_test.html"
 
     async with async_playwright() as p:
+        # Launching Chromium with some stealth-like configurations
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(
             user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-            locale="pt-BR"
+            locale="pt-BR",
+            viewport={'width': 1920, 'height': 1080}
         )
         page = await context.new_page()
         
+        # Setting a random webdriver flag to false to bypass basic bot detections
+        await page.add_init_script("Object.defineProperty(navigator, 'webdriver', {get: () => undefined})")
+
         print(f"Acessando URL: {url}")
         response = await page.goto(url, wait_until="networkidle", timeout=60000)
         
         print(f"Status HTTP: {response.status if response else 'N/A'}")
         
-        await page.wait_for_timeout(5000) # wait for bot protection
+        # Wait for potential Cloudflare challenge to pass (or fail)
+        await page.wait_for_timeout(8000)
         
         # Tirar Screenshot
         await page.screenshot(path=screenshot_path, full_page=True)

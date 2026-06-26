@@ -4,13 +4,14 @@ import { renderAlerts } from './pages/alerts.js';
 import { renderHistory } from './pages/history.js';
 import { renderDestinations } from './pages/destinations.js';
 import { renderPreferences } from './pages/preferences.js';
+import { renderTracker } from './pages/tracker.js';
 
 const menuItems = [
     { id: 'dashboard', icon: '🏠', label: 'Meu Painel', path: '#/dashboard' },
+    { id: 'tracker', icon: '🛰️', label: 'Rastreio de Voos', path: '#/tracker' },
     { id: 'favorites', icon: '❤️', label: 'Favoritos', path: '#/favorites' },
     { id: 'alerts', icon: '🔔', label: 'Alertas de preço', path: '#/alerts' },
     { id: 'history', icon: '🕒', label: 'Histórico de buscas', path: '#/history' },
-    { id: 'destinations', icon: '📍', label: 'Destinos salvos', path: '#/destinations' },
     { id: 'preferences', icon: '⚙️', label: 'Preferências', path: '#/preferences' }
 ];
 
@@ -553,6 +554,7 @@ function setupThemeToggle() {
 
 const routes = {
     '#/dashboard': renderDashboard,
+    '#/tracker': renderTracker,
     '#/favorites': renderFavorites,
     '#/alerts': renderAlerts,
     '#/history': renderHistory,
@@ -568,6 +570,16 @@ function handleRoute() {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
     document.querySelectorAll(`.nav-item[href="${path}"]`).forEach(el => el.classList.add('active'));
 
+    // Toggle search bar visibility based on route
+    const isDashboard = (path === '#/dashboard');
+    const tabs = document.querySelector('.topbar-tabs');
+    const tripType = document.getElementById('flight-trip-type');
+    const searchBar = document.querySelector('.search-bar-container');
+    
+    if (tabs) tabs.style.display = isDashboard ? 'flex' : 'none';
+    if (tripType) tripType.style.display = isDashboard ? 'block' : 'none';
+    if (searchBar) searchBar.style.display = isDashboard ? 'flex' : 'none';
+
     // Render content
     if (routes[path]) {
         contentEl.innerHTML = '';
@@ -576,5 +588,84 @@ function handleRoute() {
         contentEl.innerHTML = `<h2>Em construção</h2><p>A página para ${path} será implementada em breve.</p>`;
     }
 }
+
+window.resetSearchAndHome = function() {
+    window.location.hash = '#/dashboard';
+    
+    const overlay = document.getElementById('search-results-overlay');
+    if (overlay) overlay.classList.remove('show');
+    
+    const origin = document.getElementById('origin-input');
+    if (origin) origin.value = '';
+    
+    const dest = document.getElementById('destination-input');
+    if (dest) dest.value = '';
+};
+
+window.locateMe = function() {
+    if ("geolocation" in navigator) {
+        window.showToast("Buscando sua localização...", "info");
+        navigator.geolocation.getCurrentPosition((position) => {
+            const lat = position.coords.latitude;
+            const lon = position.coords.longitude;
+            window.showToast("Localização encontrada!", "success");
+            
+            if (window._dashboardMap) {
+                window._dashboardMap.setView([lat, lon], 12);
+                L.marker([lat, lon]).addTo(window._dashboardMap).bindPopup('Você está aqui!').openPopup();
+            } else {
+                window.location.hash = '#/dashboard';
+                setTimeout(() => {
+                    if (window._dashboardMap) {
+                        window._dashboardMap.setView([lat, lon], 12);
+                        L.marker([lat, lon]).addTo(window._dashboardMap).bindPopup('Você está aqui!').openPopup();
+                    }
+                }, 500);
+            }
+        }, (error) => {
+            window.showToast("Erro ao obter localização. Permissão negada ou indisponível.", "error");
+        }, {
+            enableHighAccuracy: true,
+            timeout: 15000,
+            maximumAge: 0
+        });
+    } else {
+        window.showToast("Seu navegador não suporta geolocalização.", "error");
+    }
+};
+
+window.searchMapDestination = async function() {
+    const input = document.getElementById('map-search-input');
+    if (!input || !input.value.trim()) return;
+    
+    const query = input.value.trim();
+    window.showToast("Buscando destino...", "info");
+    
+    try {
+        const resp = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}`);
+        const data = await resp.json();
+        
+        if (data && data.length > 0) {
+            const lat = parseFloat(data[0].lat);
+            const lon = parseFloat(data[0].lon);
+            window.showToast(`Destino encontrado: ${data[0].display_name.split(',')[0]}`, "success");
+            
+            if (window._dashboardMap) {
+                window._dashboardMap.setView([lat, lon], 12);
+            } else {
+                window.location.hash = '#/dashboard';
+                setTimeout(() => {
+                    if (window._dashboardMap) {
+                        window._dashboardMap.setView([lat, lon], 12);
+                    }
+                }, 500);
+            }
+        } else {
+            window.showToast("Destino não encontrado.", "error");
+        }
+    } catch (e) {
+        window.showToast("Erro ao buscar o destino.", "error");
+    }
+};
 
 document.addEventListener('DOMContentLoaded', initUI);

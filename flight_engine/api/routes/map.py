@@ -1,6 +1,7 @@
 from fastapi import APIRouter, HTTPException
 from typing import Optional
 import json
+import httpx
 from services.accommodation_service import accommodation_service
 
 router = APIRouter(prefix="/api/map", tags=["map"])
@@ -101,5 +102,54 @@ async def get_map_data(
             heatmap.append([acc["latitude"], acc["longitude"], price_val])
 
         return {"markers": markers, "heatmap": heatmap}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/pois")
+async def get_pois(
+    south: float,
+    west: float,
+    north: float,
+    east: float
+):
+    try:
+        query = f"""
+        [out:json][timeout:10];
+        (
+          node["tourism"~"hotel|guest_house|hostel"]({south},{west},{north},{east});
+          node["aeroway"~"aerodrome|terminal"]({south},{west},{north},{east});
+          node["amenity"~"bus_station"]({south},{west},{north},{east});
+        );
+        out body;
+        """
+        
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            resp = await client.post("https://overpass-api.de/api/interpreter", data={"data": query})
+            resp.raise_for_status()
+            data = resp.json()
+            
+            elements = data.get("elements", [])
+            pois = []
+            
+            for el in elements:
+                tags = el.get("tags", {})
+                poi_type = "unknown"
+                if "aeroway" in tags:
+                    poi_type = "airport"
+                elif "amenity" in tags and tags["amenity"] == "bus_station":
+                    poi_type = "bus_station"
+                elif "tourism" in tags:
+                    poi_type = "hotel"
+                
+                name = tags.get("name", "Local desconhecido")
+                if poi_type != "unknown":
+                    pois.append({
+                        "id": el["id"],
+                        "lat": el["lat"],
+                        "lon": el["lon"],
+                        "name": name,
+                        "type": poi_type
+                    })
+            return pois
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))

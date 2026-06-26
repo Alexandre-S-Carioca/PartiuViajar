@@ -70,15 +70,36 @@ class AccommodationService:
                 if not models:
                     # Trigger crawler on the fly
                     logger.info(f"No hotels found in DB for {city_upper}. Triggering scraper...")
+                    
+                    # Busca coordenada base da cidade via Nominatim
+                    base_lat = -14.235
+                    base_lon = -51.925
+                    try:
+                        import httpx
+                        async with httpx.AsyncClient() as client:
+                            nom_url = f"https://nominatim.openstreetmap.org/search?q={city_upper}&format=json&limit=1"
+                            nom_resp = await client.get(nom_url, headers={'User-Agent': 'PartiuViajarBuscador/1.0'})
+                            if nom_resp.status_code == 200:
+                                nom_data = nom_resp.json()
+                                if nom_data and len(nom_data) > 0:
+                                    base_lat = float(nom_data[0]['lat'])
+                                    base_lon = float(nom_data[0]['lon'])
+                                    logger.info(f"Coordenadas de {city_upper} encontradas: {base_lat}, {base_lon}")
+                    except Exception as e:
+                        logger.error(f"Erro ao buscar coordenadas no Nominatim para {city_upper}: {e}")
+
+                    from infrastructure.collectors.booking_hotels_collector import BookingHotelsCollector
                     collector = BookingHotelsCollector()
                     try:
                         hotels_data = await collector.fetch_hotels(city_upper)
                         if hotels_data:
                             models = []
+                            import random
                             for h in hotels_data:
-                                # Random coords roughly near standard lat/lon, or 0,0 if unknown
-                                lat = random.uniform(-30.0, 30.0)
-                                lon = random.uniform(-60.0, 60.0)
+                                # Variação de até ~2km ao redor do centro da cidade
+                                lat = base_lat + random.uniform(-0.02, 0.02)
+                                lon = base_lon + random.uniform(-0.02, 0.02)
+                                
                                 acc = AccommodationModel(
                                     id=h["id"],
                                     name=h["name"],

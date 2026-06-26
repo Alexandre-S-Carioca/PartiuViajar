@@ -12,7 +12,9 @@ class CopaCollector(BaseCollector):
     def __init__(self):
         super().__init__(name="COPA")
 
-    async def fetch_flights(self, origin: str, destination: str, departure_date: datetime, adults: int) -> List[Flight]:
+    async def fetch_flights(
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
+    ) -> List[Flight]:
         if not feature_flags.ENABLE_COPA:
             return []
         try:

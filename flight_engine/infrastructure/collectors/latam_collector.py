@@ -14,7 +14,7 @@ class LatamCollector(BaseCollector):
         self.base_url = "https://api.latam.mock/flights"
 
     async def fetch_flights(
-        self, origin: str, destination: str, departure_date: datetime, adults: int
+        self, origin: str, destination: str, departure_date: datetime, adults: int, currency: str = "BRL"
     ) -> List[Flight]:
         if not feature_flags.ENABLE_LATAM:
             logger.info(f"[{self.name}] Collector disabled via feature flag.")

@@ -11,13 +11,14 @@
     <link rel="stylesheet" href="/static/styles/index.css?v=3">
     <link rel="stylesheet" href="/static/styles/dashboard.css?v=3">
     <link rel="stylesheet" href="/static/styles/premium.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="app" class="app-container">
         <!-- Sidebar -->
         <aside class="sidebar">
-            <div class="sidebar-logo">
+            <div class="sidebar-logo" onclick="window.resetSearchAndHome()" style="cursor: pointer;" title="Voltar ao início">
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M2 12L22 2L15 22L11 13L2 12Z" fill="#3B82F6"/>
                 </svg>
@@ -54,7 +55,8 @@
                 </div>
                 
                 <div class="topbar-actions">
-                    <button class="icon-btn">🌙</button>
+                    <button class="icon-btn" onclick="window.locateMe()" title="Minha Localização">📍</button>
+                    <button class="icon-btn theme-toggle" title="Alternar tema escuro">🌙</button>
                     <div class="user-dropdown-trigger" id="user-menu-btn">
                         <img src="https://ui-avatars.com/api/?name=Visitante&background=ccc&color=fff" alt="Visitante" class="avatar" id="topbar-avatar">
                         <span class="user-name" id="topbar-name">Visitante <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg></span>
@@ -76,7 +78,6 @@
                             <li class="auth-required"><a href="#/favorites"><span class="icon">❤️</span> Favoritos</a></li>
                             <li class="auth-required"><a href="#/alerts"><span class="icon">🔔</span> Alertas de preço</a></li>
                             <li class="auth-required"><a href="#/history"><span class="icon">🕒</span> Histórico de buscas</a></li>
-                            <li class="auth-required"><a href="#/destinations"><span class="icon">📍</span> Destinos salvos</a></li>
                             <li><a href="#/preferences"><span class="icon">⚙️</span> Preferências</a></li>
                             <li class="divider"></li>
                             <li><div class="theme-toggle-inline"><span class="icon">🌙</span> Tema escuro <label class="switch"><input type="checkbox"><span class="slider round"></span></label></div></li>
@@ -164,6 +165,7 @@
         </div>
     </div>
 
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script type="module" src="/static/app.js?v=20"></script>
 </body>
 </html>
